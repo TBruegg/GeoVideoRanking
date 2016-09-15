@@ -1,0 +1,52 @@
+body {
+    padding: 0px;
+    padding-top: 50px;
+    margin: 0px;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+#results {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 300px;
+    background: dimgrey;
+    color: white;
+    padding: 10px;
+    padding-top: 50px;
+    transition: all linear 0.1s;
+    -webkit-box-shadow: -2px 0px 6px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: -2px 0px 6px 0px rgba(0,0,0,0.75);
+    box-shadow: -2px 0px 6px 0px rgba(0,0,0,0.75);
+}
+
+
+#container {
+    position: absolute;
+    z-index: 0
+}
+
+#container_scene {
+    position: absolute;
+    z-index: 1;
+}
+
+#btn_results {
+    margin-left: 10px;
+}
+
+.navbar {
+    margin-bottom: 0px;
+    height: 50px;
+}
+
+.animated.ng-hide {
+    opacity: 0;
+    width: 700px;
+}
+

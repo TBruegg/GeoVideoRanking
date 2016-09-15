@@ -1,0 +1,41 @@
+<html ng-app="main">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GeoSearch</title>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container navbar-left" ng-controller="navCtrl">
+        <div class="navbar-header">
+            <h3 class="navbar-text">GeoSearch</h3>
+        </div>
+        <div id = "navbar" class="collapse navbar-collapse">
+            <form class="navbar-form navbar-left">
+                <div class="form-group">
+                    <button class="btn btn-default" ng-click="resultPanelController.toggleResults()">Show Search Results</button>
+                    <button id="queryButton" class="btn btn-warning" ng-click="queryService.polygonQuery()">Search Videos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</nav>
+<div id="map" ng-controller="mapCtrl"></div>
+<div id="result-container" ng-controller="resultCtrl">
+    <div id="results" ng-hide="resultPanelController.isVisible()" class="animated">
+        <h3>Suchergebnisse</h3>
+        <p>Search Results</p>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-animate.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
