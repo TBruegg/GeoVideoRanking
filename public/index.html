@@ -17,7 +17,7 @@
         <div id = "navbar" class="collapse navbar-collapse">
             <form class="navbar-form navbar-left">
                 <div class="form-group">
-                    <button class="btn btn-default" ng-click="resultPanelController.toggleResults()">Show Search Results</button>
+                    <button class="btn btn-default" ng-click="resultPanelService.toggleResults()">Show Search Results</button>
                     <button id="queryButton" class="btn btn-warning" ng-click="queryService.polygonQuery()">Search Videos</button>
                 </div>
             </form>
@@ -26,7 +26,7 @@
 </nav>
 <div id="map" ng-controller="mapCtrl"></div>
 <div id="result-container" ng-controller="resultCtrl">
-    <div id="results" ng-hide="resultPanelController.isVisible()" class="animated">
+    <div id="results" ng-hide="resultPanelService.isVisible()" class="animated">
         <h3>Suchergebnisse</h3>
         <p>Search Results</p>
     </div>
@@ -36,6 +36,11 @@
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-animate.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
 <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
-<script src="js/main.js"></script>
+<script src="js/app.js"></script>
+<script src="js/services/resultPanelService.js"></script>
+<script src="js/services/queryService.js"></script>
+<script src="js/controllers/mapController.js"></script>
+<script src="js/controllers/navCtrl.js"></script>
+<script src="js/controllers/resultCtrl.js"></script>
 </body>
 </html>
