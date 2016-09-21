@@ -3,40 +3,22 @@
  */
 
 angular.module('main').controller('mapCtrl', function($scope, $http, queryService){
-    $scope.queryService = queryService;
 
-    map = L.map('map').setView([1.285611, 103.856377], 13);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    var map = L.map('map').setView([1.285611, 103.856377], 13);
+    var baseLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-    // Variable that holds GeoJSON representation of query region
+    });
+    baseLayer.addTo(map);
+    var drawnItems = new L.FeatureGroup();
+    var layerControl = L.control.layers({},{"Query Polygons":drawnItems},{position:'bottomleft'}).addTo(map);
     var queryJson = {};
     var addMarker = function(obj) {
         id = obj['id'];
         console.log(obj['st_asgeojson']);
-        //console.log(JSON.parse(obj['st_asgeojson']));
         geometry = JSON.parse(obj['st_asgeojson']);
-        L.geoJson(geometry).addTo(map);
+        marker = L.geoJson(geometry).addTo(map);
+        marker.bindPopup('ID: ' + obj['id']);
     };
-    $scope.queryService.setQueryCallback(addMarker);
-    // Initialise feature group for drawn query regions
-    var drawnItems = new L.FeatureGroup();
-    drawnItems.on('layeradd', function(l){
-        isVisible = drawnItems.getLayers().length;
-        $scope.queryService.toggleQueryButton(isVisible);
-    });
-    drawnItems.on('layerremove', function(l){
-        isVisible = drawnItems.getLayers().length;
-        if(isVisible == 0){
-            $scope.queryService.setQuery({});
-        }
-        $scope.queryService.toggleQueryButton(isVisible);
-        console.log(queryJson);
-    });
-    var layerControl = L.control.layers({},{"Query Polygons":drawnItems},{position:'bottomleft'}).addTo(map);
-    map.addLayer(drawnItems);
-
-    // Initialise draw controls
     var drawControl = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,
@@ -58,9 +40,33 @@ angular.module('main').controller('mapCtrl', function($scope, $http, queryServic
             }
         }
     });
+
+    $scope.queryService = queryService;
+    $scope.queryService.setQueryCallback(addMarker);
+
+    map.addLayer(drawnItems);
     map.addControl(drawControl);
 
-    // Event listeners
+
+
+    // ----------------------------------------------
+    // Event Handler
+    // ----------------------------------------------
+
+    drawnItems.on('layeradd', function(l){
+        isVisible = drawnItems.getLayers().length;
+        $scope.queryService.toggleQueryButton(isVisible);
+    });
+
+    drawnItems.on('layerremove', function(l){
+        isVisible = drawnItems.getLayers().length;
+        if(isVisible == 0){
+            $scope.queryService.setQuery({});
+        }
+        $scope.queryService.toggleQueryButton(isVisible);
+        console.log(queryJson);
+    });
+
     map.on('draw:created', function(e){
         var type = e.layerType;
         var layer = e.layer;
@@ -70,5 +76,6 @@ angular.module('main').controller('mapCtrl', function($scope, $http, queryServic
         queryJson = queryJson.features[0];
         $scope.queryService.setQuery(queryJson);
     });
+
 
 });

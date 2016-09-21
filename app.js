@@ -5,10 +5,15 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var turf = require('turf');
+var wkx = require('wkx');
+var q = require('q');
+async = require('async');
+
+var algorithms = require('./algorithms/geo-algorithms');
 
 var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
-
+var fovTableName = "fovpolygons_90";
 
 // API ROUTES
 // ----------------------------------------------------------------
@@ -22,21 +27,17 @@ app.get('/api/startingPoints', function (req,res) {
    res.send('ROUTE startingPoints');
 });
 
-app.get('/api/polygonQuery/:lat_sw/:lng_sw/:lat_ne/:lng_ne', function (req,res) {
+app.get('/api/polygonQuery', function (req,res) {
+    var queryRegion = JSON.parse(req.query.region);
     var dbClient = new pg.Client(dbConnectionString);
     dbClient.connect();
     var results = {"result":[]};
-    var lat_sw = req.params.lat_sw;
-    var lng_sw = req.params.lng_sw;
-    var lat_ne = req.params.lat_ne;
-    var lng_ne = req.params.lng_ne;
-    var polygonWkt = `ST_GeomFromText('POLYGON((${lng_sw} ${lat_sw}, ${lng_sw} ${lat_ne},  
-                    ${lng_ne} ${lat_ne}, ${lng_ne} ${lat_sw}, ${lng_sw} ${lat_sw}))',4326)`;
-    console.log(polygonWkt);
+    var polygonGeoJSON = wkx.Geometry.parseGeoJSON(queryRegion.geometry);
+    var polygonWkt = polygonGeoJSON.toWkt();
     var queryString = "SELECT DISTINCT v.id, ST_AsGeoJSON(v.initial_location) FROM points as p " +
-                "INNER JOIN fovpolygons_90 as f ON f.camera_location = p.id " +
+                "INNER JOIN " + fovTableName + " as f ON f.camera_location = p.id " +
                 "INNER JOIN videos as v ON p.video = v.id " +
-                "WHERE ST_Overlaps(f.geometry," + polygonWkt + ");"
+                "WHERE ST_Overlaps(f.geometry, ST_GeomFromText('" + polygonWkt + "',4326));";
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
         console.log(row);
@@ -45,15 +46,65 @@ app.get('/api/polygonQuery/:lat_sw/:lng_sw/:lat_ne/:lng_ne', function (req,res) 
     query.on('end', function(){
         dbClient.end();
         res.json(results);
+        resultsToFOVStore(results).then(
+            function (value) {
+                console.log("FOVStore created succesfully");
+            }
+        );
     });
     //res.json(results);
 });
 
-
+// Helper functions
 // ----------------------------------------------------------------
+
+var videoFOVs = function (id) {
+    var defer = q.defer();
+    var fovList = {"id":id,"fovs":[]};
+    var dbClient = new pg.Client(dbConnectionString);
+    dbClient.connect();
+    var queryString = "SELECT f.id, f.camera_location, f.heading, f.viewable_angle, f.visible_distance, ST_asGeoJSON(f.geometry), " +
+                      "f.time, p.video, p.location, p.date, p.latitude, p.longitude " +
+                      "FROM fovpolygons_90 AS f " +
+                      "INNER JOIN points as p " +
+                      "ON f.camera_location = p.id " +
+                      "WHERE p.video = '" + id + "'";
+    var query = dbClient.query(queryString);
+    query.on('row', function (row) {
+        fovList.fovs.push(row);
+    });
+    query.on('end', function(){
+        dbClient.end();
+        defer.resolve(fovList);
+    });
+    return defer.promise;
+};
+
+var resultsToFOVStore = function (results) {
+    var defer = q.defer();
+    var fovStore = {};
+    it = 0;
+    for (var i in results['result']) {
+        videoId = results['result'][i].id;
+        console.log(videoId);
+        videoFOVs(videoId).then(
+            function (fovList) {
+                fovStore[fovList['id']] = fovList['fovs'];
+                if(Object.keys(fovStore).length == results['result'].length){
+                    defer.resolve(fovStore);
+                } else {
+                    console.log(i);
+                }
+            }
+        );
+    }
+    return defer.promise;
+};
 
 
 // Listen on Port 80
+// ----------------------------------------------------------------
+
 app.use('/', express.static(__dirname + '/public'));
 var server = app.listen(80, function () {
 
@@ -63,4 +114,6 @@ var server = app.listen(80, function () {
     console.log("Example app listening at http://%s:%s", host, port);
 
 });
+
+
 
