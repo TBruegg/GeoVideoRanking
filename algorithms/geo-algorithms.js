@@ -5,7 +5,15 @@ var turf = require('turf');
 // var exports = module.exports;
 
 polygonEdges = function (polygon) {
-
+    var polygonEdges = [];
+    var coords = polygon.geometry['coordinates'][0];
+    for(var i = 0; i < coords.length-1; i++){
+        var edgeTemplate = {"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[]}};
+        edgeTemplate.geometry['coordinates'].push(coords[i]);
+        edgeTemplate.geometry['coordinates'].push(coords[i+1]);
+        polygonEdges.push(edgeTemplate);
+    }
+    return polygonEdges;
 };
 
 polygonVertices = function (polygon) {
@@ -21,16 +29,23 @@ fovCornerPoints = function (point, direction, angle, distance) {
 };
 
 pointFOVIntersect = function (point, FOVScene) {
-    value = turf.intersect(point,FOVScene);
     return !(turf.intersect(point,FOVScene) == undefined);
 };
 
 pointPolygonIntersect = function(point, queryRegion){
     return !(turf.intersect(point,queryRegion) == undefined);
 };
-
+// TODO: lineIntersect wie in Paper beschrieben nur für Segmente verwenden, evtl neue Funktion lineStringIntersect?
 lineIntersect = function (line1, line2) {
-    return turf.intersect(line1,line2) || null;
+    var intersections = turf.intersect(line1,line2) || null;
+    if(intersections != null && intersections.geometry.type == 'MultiPoint'){
+        pt1 = {"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":intersections.geometry.coordinates[0]}};
+        pt2 = {"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":intersections.geometry.coordinates[1]}};
+        intersections = [pt1,pt2];
+    } else if(intersections != null){
+        intersections = [intersections];
+    }
+    return intersections;
 };
 
 lineCircleIntersect = function (line, centerPoint, radius) {
@@ -84,6 +99,86 @@ createCircle = function(centerPoint, radius){
     return circle
 };
 
+asPoint = function(lat, lng){
+    return {"type":"Feature","properties":{},"geometry":{"type":"Point","coordinates":[lng,lat]}};
+};
+
+asLine = function(point1, point2){
+    var line = {"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[]}};
+    line.geometry['coordinates'].push(point1.geometry['coordinates']);
+    line.geometry['coordinates'].push(point2.geometry['coordinates']);
+    return line;
+};
+
+sceneIntersect = function(query, fov){
+    // Query polygon, vertices and edges (1)
+    var qPolygon = query;
+    var fovScene = fov;
+    var qVertices = polygonVertices(qPolygon)['features'];
+    var qEdges = polygonEdges(qPolygon);
+
+    // FOV model parameters (6)
+    var cameraLocation = asPoint(fovScene.properties['latitude'], fovScene.properties['longitude']);
+    var direction = fovScene.properties['heading'];
+    var visibleDistance = fovScene.properties['visible_distance'];
+    var visibleAngle = fovScene.properties['viewable_angle'];
+
+    // FOVScene for which rankscore is calculated (3)
+    var fovCorners = fovCornerPoints(cameraLocation, direction, visibleAngle, visibleDistance);
+    var fovEdges = [asLine(fovCorners[0],fovCorners[1]), asLine(fovCorners[0],fovCorners[2])];
+
+    if(turf.intersect(cameraLocation, qPolygon)){
+        return true;
+    }
+    for(var i=0; i < qVertices.length; i++){
+        // TODO: Eventuell pointFOVIntersect anstelle von pointFOVIntersect2 verwenden
+        if(pointFOVIntersect2(qVertices[i],fov)){
+            return true;
+        }
+    }
+    for(var i=0; i < qEdges.length; i++){
+        if(edgeFOVIntersect(qEdges[i],fov)){
+            return true;
+        }
+    }
+    return false;
+};
+
+pointFOVIntersect2 = function(pt, fov){
+    var q = pt;
+    var fovScene = fov;
+    var cameraLocation = asPoint(fovScene.properties['latitude'], fovScene.properties['longitude']);
+    var visibleDistance = fovScene.properties['visible_distance'];
+    if(turf.distance(q,cameraLocation) <= visibleDistance){
+        var alpha = fovScene.properties['heading'];
+        var angle = fovScene.properties['viewable_angle'];
+        if(isWithinAngle(q, cameraLocation, alpha, angle)){
+            return true;
+        }
+    }
+    return false;
+};
+
+edgeFOVIntersect = function(ed, fov){
+    var e = ed;
+    var fovScene = fov;
+    var cameraLocation = asPoint(fovScene.properties['latitude'], fovScene.properties['longitude']);
+    var visibleDistance = fovScene.properties['visible_distance'];
+    var intersections = lineCircleIntersect(e, cameraLocation, visibleDistance);
+    var direction = fovScene.properties['heading'];
+    var visibleAngle = fovScene.properties['viewable_angle'];
+    for(var i=0; i < intersections.length; i++){
+        if(isWithinAngle(intersections[i], cameraLocation, direction, visibleAngle)){
+            return true;
+        }
+    }
+    return false;
+};
+
+rectIntersect = function(rect1, query){
+    return turf.intersect(rect1, query) != undefined;
+};
+
 module.exports = {
     "polygonEdges": polygonEdges,
     "polygonVertices": polygonVertices,
@@ -95,5 +190,11 @@ module.exports = {
     "isWithinAngle": isWithinAngle,
     "estimateArc": estimateArc,
     "dotProduct": dotProduct,
-    "createCircle": createCircle
+    "createCircle": createCircle,
+    "asPoint": asPoint,
+    "asLine": asLine,
+    "pointFOVIntersect2": pointFOVIntersect2,
+    "edgeFOVIntersect": edgeFOVIntersect,
+    "rectIntersect": rectIntersect,
+    "sceneIntersect": sceneIntersect
 };

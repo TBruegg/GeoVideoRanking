@@ -10,6 +10,7 @@ var q = require('q');
 async = require('async');
 
 var algorithms = require('./algorithms/geo-algorithms');
+var ranking = require('./algorithms/basic-ranking');
 
 var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
@@ -50,7 +51,21 @@ app.get('/api/polygonQuery', function (req,res) {
         createVideoStore(results).then(
             function (geoVideoCollection) {
                 console.log("FOVStore created succesfully");
-                queryResults = geoVideoCollection;
+                var queryResults = geoVideoCollection;
+                var testVideo = queryResults['177593d26d7efd4ac817387d39f659a18eabbdfe'];
+                var testPolys = [];
+                var scores = ranking.calculateRankScores(testVideo, queryRegion);
+                console.log("Scores calculated");
+                /*
+                for(var i=0; i < testVideo['fovs'].length; i+=10) {
+                    var testFOV = testVideo['fovs'][i];
+                    var poly = ranking.overlapBoundary(testFOV, queryRegion);
+                    if(poly != null) {
+                        testPolys.push(poly);
+                    }
+                }
+                //*/
+                /*
                 var sampleFOV = queryResults[Object.keys(queryResults)[0]]['fovs'][0];
                 console.log(sampleFOV);
                 var c_loc = turf.point([sampleFOV.properties['longitude'],sampleFOV.properties['latitude']]);
@@ -63,17 +78,13 @@ app.get('/api/polygonQuery', function (req,res) {
                 var pointInPolygon = algorithms.pointPolygonIntersect(c_loc, sampleFOV);
                 console.log("Point in Polygon: " + pointInPolygon);
                 var line = {
-                    "type": "Feature",
-                    "properties": {
-                        "name": "Coors Field",
-                        "amenity": "Baseball Stadium",
-                        "popupContent": "This is where the Rockies play!"
-                    },
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [[-100, 40], [-105, 45], [-110, 55]]
-                    }
-                };
+                            "type":"Feature",
+                            "id":3,
+                            "bbox":[103.8634427160471887, 1.28821130544768181, 103.86613683465103009, 1.29248987271434879],
+                            "geometry":
+                            {"type": "LineString", "coordinates": [ [103.8634427160471887, 1.29248987271434879], [103.86613683465103009, 1.28821130544768181]]},
+                            "properties":null
+                        };
                 var circle = algorithms.lineCircleIntersect(line,c_loc,0.2);
                 console.log(circle);
                 var p = {
@@ -109,6 +120,7 @@ app.get('/api/polygonQuery', function (req,res) {
                 var a3 = isWithinAngle(p3, c_loc, 134.798138, 60);
                 var a4 = isWithinAngle(p4, c_loc, 134.798138, 60);
                 var arc = algorithms.estimateArc(corners[1],corners[2],c_loc);
+                //*/
             }
         );
     });
