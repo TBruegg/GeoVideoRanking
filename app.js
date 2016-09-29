@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 var turf = require('turf');
 var wkx = require('wkx');
 var q = require('q');
-var io = require('socket.io')();
+var io = require('socket.io')(http);
 
 var algorithms = require('./algorithms/geo-algorithms');
 var ranking = require('./algorithms/basic-ranking');
@@ -52,6 +52,7 @@ app.get('/api/polygonQuery', function (req,res) {
         createVideoStore(results).then(
             function (geoVideoCollection) {
                 console.log("FOVStore created succesfully");
+                io.emit('loadUpdate', 'Video data loaded...');
                 var queryResults = geoVideoCollection;
                 for(var i=0; i < Object.keys(queryResults).length; i++){
                     var key = Object.keys(queryResults)[i];
@@ -65,8 +66,8 @@ app.get('/api/polygonQuery', function (req,res) {
                     console.log(JSON.stringify(video['rankings']));
                     console.log("Calculated rank scores for " + key);
                 }
-                console.log("Scores calculated");
-            // testing.txt goes here
+                io.emit('rankingFinished', queryResults);
+                // testing.txt goes here
             }
         );
     });
@@ -153,6 +154,19 @@ var createVideoStore = function (results) {
     }
     return defer.promise;
 };
+
+
+
+
+// Web Sockets
+// ----------------------------------------------------------------
+
+io.on('connection', function (socket) {
+    console.log('Client connected');
+    socket.on('disconnect', function () {
+        console.log('Client disconnected');
+    })
+});
 
 
 // Listen on Port 80

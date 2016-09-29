@@ -29,7 +29,22 @@
     <div id="results" ng-hide="resultPanelService.isVisible()" class="animated">
         <h3>Search Results</h3>
         <hr>
-        <div class="loader"></div>
+        <div id="resultContent">
+            <div id="loadingPage">
+                <div class="loader"></div>
+                <br>
+                <div class="loadingHint">
+                    <p id="hint">{{hint}}</p>
+                </div>
+            </div>
+            <table id="resultPage">
+              <tr ng-repeat="(key,value) in results">
+                  <td>
+                      <resultitem value="{{value}}"></resultitem>
+                  </td>
+              </tr>
+            </table>
+        </div>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
@@ -37,6 +52,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-animate.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
 <script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script src="js/app.js"></script>
 <script src="js/services/resultPanelService.js"></script>
 <script src="js/services/queryService.js"></script>

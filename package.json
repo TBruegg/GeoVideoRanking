@@ -1,7 +1,7 @@
 {
-  "name": "msc_threejs",
+  "name": "geovideoranking",
   "version": "1.0.0",
-  "description": "",
+  "description": "MSc Thesis",
   "main": "app.js",
   "dependencies": {
     "express": "^4.13.4",
@@ -10,7 +10,6 @@
     "turf": "^3.0.14",
     "wkx": "^0.4.0",
     "q": "^1.4.1",
-    "async": "^4.16.1",
     "socket.io": "^1.4.8"
   },
   "devDependencies": {},
@@ -18,5 +17,25 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Tobias Brüggentisch",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TobiTobsen92/GeoVideoRanking.git"
+  },
+  "keywords": [
+    "msc",
+    "thesis",
+    "thesis",
+    "deep",
+    "georeferences",
+    "geovideo",
+    "georeferenced",
+    "videos",
+    "video",
+    "geovideo"
+  ],
+  "bugs": {
+    "url": "https://github.com/TobiTobsen92/GeoVideoRanking/issues"
+  },
+  "homepage": "https://github.com/TobiTobsen92/GeoVideoRanking#readme"
 }

@@ -40,6 +40,10 @@ body {
     margin-left: 10px;
 }
 
+#loadingPage {
+    display: none;
+}
+
 .navbar {
     margin-bottom: 0px;
     height: 50px;
@@ -62,8 +66,26 @@ body {
     animation: spin 1s linear infinite;
 }
 
+.loadingHint {
+    position: relative;
+    margin: auto;
+    width: auto;
+    text-align: center;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.resultItem{
+    height: 100px;
+    width: 200px;
+    background: #797979;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    border: 1px solid #12A3EB;
+    display: inline;
 }
 
