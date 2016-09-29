@@ -114,6 +114,7 @@ sceneIntersect = function(query, fov){
     // Query polygon, vertices and edges (1)
     var qPolygon = query;
     var fovScene = fov;
+    console.log(JSON.stringify(fov.properties.id));
     var qVertices = polygonVertices(qPolygon)['features'];
     var qEdges = polygonEdges(qPolygon);
 
@@ -130,17 +131,18 @@ sceneIntersect = function(query, fov){
     if(turf.intersect(cameraLocation, qPolygon)){
         return true;
     }
-    for(var i=0; i < qVertices.length; i++){
-        // TODO: Eventuell pointFOVIntersect anstelle von pointFOVIntersect2 verwenden
-        if(pointFOVIntersect2(qVertices[i],fov)){
-            return true;
+
+        for(var i=0; i < qVertices.length; i++){
+            // TODO: Eventuell pointFOVIntersect anstelle von pointFOVIntersect2 verwenden
+            if(pointFOVIntersect2(qVertices[i],fov)){
+                return true;
+            }
         }
-    }
-    for(var i=0; i < qEdges.length; i++){
-        if(edgeFOVIntersect(qEdges[i],fov)){
-            return true;
+        for (var j = 0; j < qEdges.length; j++) {
+            if (edgeFOVIntersect(qEdges[j], fov)) {
+                return true;
+            }
         }
-    }
     return false;
 };
 
@@ -167,9 +169,11 @@ edgeFOVIntersect = function(ed, fov){
     var intersections = lineCircleIntersect(e, cameraLocation, visibleDistance);
     var direction = fovScene.properties['heading'];
     var visibleAngle = fovScene.properties['viewable_angle'];
-    for(var i=0; i < intersections.length; i++){
-        if(isWithinAngle(intersections[i], cameraLocation, direction, visibleAngle)){
-            return true;
+    if(intersections != null) {
+        for (var i = 0; i < intersections.length; i++) {
+            if (isWithinAngle(intersections[i], cameraLocation, direction, visibleAngle)) {
+                return true;
+            }
         }
     }
     return false;
@@ -177,6 +181,26 @@ edgeFOVIntersect = function(ed, fov){
 
 rectIntersect = function(rect1, query){
     return turf.intersect(rect1, query) != undefined;
+};
+
+simplifyFeature = function(geoJSON,digits){
+    var coords = geoJSON.geometry.coordinates;
+    var feature = geoJSON;
+    coords = roundCoordinates(coords, digits);
+    feature.geometry.coordinates = coords;
+    return feature;
+};
+
+roundCoordinates = function (coordinates, digits) {
+    var coords = coordinates;
+    for(var i=0; i < coords.length; i++){
+        if(typeof(coords[i])=='number'){
+            coords[i] = Number(coords[i].toFixed(digits));
+        } else {
+            roundCoordinates(coords[i], digits);
+        }
+    }
+    return coords;
 };
 
 module.exports = {
@@ -196,5 +220,7 @@ module.exports = {
     "pointFOVIntersect2": pointFOVIntersect2,
     "edgeFOVIntersect": edgeFOVIntersect,
     "rectIntersect": rectIntersect,
-    "sceneIntersect": sceneIntersect
+    "sceneIntersect": sceneIntersect,
+    "roundCoordinates": roundCoordinates,
+    "simplifyFeature": simplifyFeature
 };

@@ -9,4 +9,3 @@ angular.module('main').controller('navCtrl', function($scope, resultPanelService
     queryBtn.prop('disabled',true);
     $scope.queryService.setQueryButton(queryBtn);
 });
-

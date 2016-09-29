@@ -79,33 +79,10 @@ overlapBoundary = function(fov, query){
             overlapPoly.push(arcPt);
         }
     }
-    /*/
-    if(intersections.length == 2){
-        if(helpers.isWithinAngle(intersections[0], cameraLocation, direction,visibleAngle) &&
-           helpers.isWithinAngle(intersections[1], cameraLocation, direction,visibleAngle)){
-            var a = helpers.estimateArc(intersections[0],intersections[1],cameraLocation);
-        } else if(helpers.isWithinAngle(intersections[0], cameraLocation, direction,visibleAngle)){
-            // TODO: Ggf für beide Punkte prüfen, ob sie in query region liegen (aktuell wird nur Punkt 1 überprüft)
-            var nf = helpers.pointPolygonIntersect(fovCorners[1],qPolygon) ? fovCorners[1] : fovCorners[2];
-            var a = helpers.estimateArc(intersections[0],nf,cameraLocation);
-        } else if(helpers.isWithinAngle(intersections[1], cameraLocation, direction,visibleAngle)){
-            // TODO: Ggf für beide Punkte prüfen, ob sie in query region liegen (aktuell wird nur Punkt 1 überprüft)
-            var nf = helpers.pointPolygonIntersect(fovCorners[1],qPolygon) ? fovCorners[1] : fovCorners[2];
-            var a = helpers.estimateArc(intersections[1],nf,cameraLocation);
-        }
-        for(var k=0; k < a.length; k++){
-            overlapPoly.push(a[k]);
-        }
-    } else if(intersections.length == 1){
-        if(helpers.isWithinAngle(intersections[0], cameraLocation, direction, visibleAngle)){
-            // TODO: Ggf für beide Punkte prüfen, ob sie in query region liegen (aktuell wird nur Punkt 1 überprüft)
-            var nf = helpers.pointPolygonIntersect(fovCorners[1],qPolygon) ? fovCorners[1] : fovCorners[2];
-            var a = helpers.estimateArc(intersections[0],nf,cameraLocation);
-        }
-        for(var k=0; k < a.length; k++){
-            overlapPoly.push(a[k]);
-        }
-    } /*/
+
+    // Old approach goes here
+    // --> <--
+
     if(overlapPoly.length > 0) {
         overlapPoly = {"type": "FeatureCollection", "features": overlapPoly};
         overlapPoly = turf.convex(overlapPoly);
@@ -123,33 +100,45 @@ calculateRankScores = function(video,query){
     var n = videoFOVs.length;
     var M = turf.bboxPolygon(turf.bbox(fovCollection));
     var rtaPoly = undefined;
-    var rta = undefined;
+    var rta = 0;
     var rsa = 0;
     var rd = 0;
     // Calculation of Rank Scores
     // Filter step 1
     if(helpers.rectIntersect(M, queryPolygon)) {
-        for (var i = 0; i < n - 1; i++) {
+        // TODO: Letzter Frame wird derzeit nicht betrachtet, da t(i+1) - t(i) beim letzten Frame nicht möglich ist
+        for (var i = 0; i < n-1; i++) {
             var FOV = videoFOVs[i];
             var M1 = turf.bboxPolygon(turf.bbox(FOV));
             // Filter step 2
             if (helpers.rectIntersect(M1, queryPolygon)) {
-                if(helpers.sceneIntersect(queryPolygon, FOV)){
+                if (helpers.sceneIntersect(queryPolygon, FOV)) {
                     var oPoly = overlapBoundary(FOV, queryPolygon);
+                    // TODO: Ensure that time property is not null or undefined
                     var t1 = FOV.properties['time'];
-                    var t2 = videoFOVs[i+1].properties['time'];
-                    if(rtaPoly == undefined){
+                    var t2 = videoFOVs[i + 1].properties['time'];
+                    if (rtaPoly == undefined) {
                         rtaPoly = oPoly;
                     } else {
-                        rtaPoly = turf.union(rtaPoly, oPoly);
+                        try{
+                            rtaPoly = turf.union(rtaPoly, oPoly);
+                        } catch(e){
+                            console.log(e);
+                            try{
+                                oPoly = helpers.simplifyFeature(oPoly, 10);
+                                rtaPoly = turf.union(rtaPoly, oPoly);
+                            }catch (e){
+                                console.log("Simplification didn't resolve issue: " + e);
+                            }
+                        }
                     }
-                    rsa += turf.area(oPoly)*(t2-t1)/1000;
-                    rd += (t2-t1)/1000;
+                    rsa += turf.area(oPoly) * (t2 - t1) / 1000;
+                    rd += (t2 - t1) / 1000;
                 }
             }
         }
+        rta = turf.area(turf.convex(rtaPoly));
     }
-    rta = turf.area(turf.convex(rtaPoly));
     return {"rta": rta, "rsa": rsa, "rd": rd};
 };
 

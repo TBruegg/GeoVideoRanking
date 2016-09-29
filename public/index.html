@@ -27,8 +27,9 @@
 <div id="map" ng-controller="mapCtrl"></div>
 <div id="result-container" ng-controller="resultCtrl">
     <div id="results" ng-hide="resultPanelService.isVisible()" class="animated">
-        <h3>Suchergebnisse</h3>
-        <p>Search Results</p>
+        <h3>Search Results</h3>
+        <hr>
+        <div class="loader"></div>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
