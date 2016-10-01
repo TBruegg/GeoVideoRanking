@@ -4,6 +4,8 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
+var fs = require('fs');
+var path = require('path');
 var bodyParser = require('body-parser');
 var turf = require('turf');
 var wkx = require('wkx');
@@ -23,6 +25,36 @@ var fovTableName = "fovpolygons_90";
 // Standard route for delivering main application
 app.get('/', function (req, res) {
     res.sendFile( __dirname + "/" + "public/index.html" );
+});
+
+app.get('/video/:id', function (req,res) {
+    var videoId = req.params.id;
+    var url = "F:/Videos GeoVid/videos/" + videoId +".mp4";
+    var filePath = path.resolve(url);
+    var stat = fs.statSync(filePath);
+    var total = stat.size;
+    if (req.headers['range']) {
+        var range = req.headers.range;
+        var parts = range.replace(/bytes=/, "").split("-");
+        var partialstart = parts[0];
+        var partialend = parts[1];
+
+        var start = parseInt(partialstart, 10);
+        var end = partialend ? parseInt(partialend, 10) : total-1;
+        var chunksize = (end-start)+1;
+        console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
+
+        var file = fs.createReadStream(filePath, {start: start, end: end});
+        res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
+                             'Accept-Ranges': 'bytes',
+                             'Content-Length': chunksize,
+                             'Content-Type': 'video/mp4'
+        });
+        file.pipe(res);
+    } else {
+        res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
+        fs.createReadStream(filePath).pipe(res);
+    }
 });
 
 app.get('/api/startingPoints', function (req,res) {
@@ -49,10 +81,12 @@ app.get('/api/polygonQuery', function (req,res) {
     query.on('end', function(){
         dbClient.end();
         res.json(results);
+        io.emit('loadUpdate', 'Loading FOV data...');
         createVideoStore(results).then(
             function (geoVideoCollection) {
                 console.log("FOVStore created succesfully");
-                io.emit('loadUpdate', 'Video data loaded...');
+                // TODO: Nur an zugehörigen Client senden
+                io.emit('loadUpdate', 'Calculating rank scores...');
                 var queryResults = geoVideoCollection;
                 for(var i=0; i < Object.keys(queryResults).length; i++){
                     var key = Object.keys(queryResults)[i];
@@ -66,6 +100,7 @@ app.get('/api/polygonQuery', function (req,res) {
                     console.log(JSON.stringify(video['rankings']));
                     console.log("Calculated rank scores for " + key);
                 }
+                // TODO: Nur an zugehörigen Client senden
                 io.emit('rankingFinished', queryResults);
                 // testing.txt goes here
             }
@@ -90,7 +125,7 @@ var videoFOVs = function (id) {
                       "WHERE p.video = '" + id + "'";
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
-        geometry = JSON.parse(row['geometry']);
+        var geometry = JSON.parse(row['geometry']);
         delete row['geometry'];
         geoJson = {"type": "Feature",
                     "properties": row,

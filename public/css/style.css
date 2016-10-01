@@ -9,12 +9,20 @@ body {
     width: 100%;
 }
 
-#results {
+#result-container {
     position: absolute;
     top: 0;
     right: 0;
     height: 100%;
-    width: 300px;
+    width: 400px;
+}
+
+#results{
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 400px;
     background: dimgrey;
     color: white;
     padding: 10px;
@@ -40,8 +48,27 @@ body {
     margin-left: 10px;
 }
 
+#resultContent{
+    height: 85%;
+    overflow: auto;
+    display: inline-block;
+}
+
 #loadingPage {
     display: none;
+    margin: auto;
+    width: 100%;
+}
+
+#resultPage{
+    width: 100%;
+    height: 100%
+}
+
+#modalVideo {
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .navbar {
@@ -69,7 +96,7 @@ body {
 .loadingHint {
     position: relative;
     margin: auto;
-    width: auto;
+    width: 350px;
     text-align: center;
 }
 
@@ -79,13 +106,31 @@ body {
 }
 
 .resultItem{
-    height: 100px;
-    width: 200px;
-    background: #797979;
+    height: 150px;
+    width: 100%;
+    background: #FFFFFF;
     margin-bottom: 5px;
+    /*border: 1px solid #12A3EB;*/
+    font-size: xx-small;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.resultItem:hover {
+    background: #AAAAAA;
+    cursor: hand;
+}
+
+.resultItem:active {
+    background: #368AD2;
+    color: white;
+}
+
+.resultItem video {
+    width: 80%;
     margin-left: 5px;
-    margin-right: 5px;
-    border: 1px solid #12A3EB;
-    display: inline;
+}
+
+.resultItem table {
+    text-align: left;
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>GeoSearch</title>
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
     <link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css" />
     <link rel="stylesheet" href="css/style.css" />
@@ -37,17 +37,38 @@
                     <p id="hint">{{hint}}</p>
                 </div>
             </div>
-            <table id="resultPage">
-              <tr ng-repeat="(key,value) in results">
-                  <td>
-                      <resultitem value="{{value}}"></resultitem>
-                  </td>
-              </tr>
-            </table>
+            <div id="resultPage">
+                <table>
+                  <tr ng-repeat="(key,value) in results">
+                      <td>
+                          <result-item value="value"></result-item>
+                      </td>
+                  </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Video Modal -->
+<div class="modal fade" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="meinModalLabel" ng-controller="resultCtrl">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="videoModalLabel"></h4>
+            </div>
+            <div class="modal-body">
+                <center></center>
+                <video id="modalVideo" src="video/05ea0f610bd54b68602734a70f3914147038aae7" type="video/mp4" controls></video>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="document.getElementById('modalVideo').pause()">Close</button>
+            </div>
         </div>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-1.12.3.min.js" integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-animate.js"></script>
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
@@ -59,5 +80,6 @@
 <script src="js/controllers/mapController.js"></script>
 <script src="js/controllers/navCtrl.js"></script>
 <script src="js/controllers/resultCtrl.js"></script>
+<script src="js/directives/resultItem.js"></script>
 </body>
 </html>

@@ -1,12 +1,13 @@
 /**
  * Created by Tobi on 29.09.2016.
  */
-angular.module('main').controller('resultCtrl', function($scope, resultPanelService){
+angular.module('main').controller('resultCtrl', function($scope, $sce, resultPanelService){
     var socket = io();
 
     $scope.resultPanelService = resultPanelService;
     $scope.hint = "Loading...";
     $scope.results = undefined;
+    $scope.sce = $sce;
 
     // Socket events
     socket.on('loadUpdate', function (msg) {
@@ -18,6 +19,12 @@ angular.module('main').controller('resultCtrl', function($scope, resultPanelServ
 
     socket.on('rankingFinished', function (results) {
         console.log("Ranking done");
+        for(var i=0; i<Object.keys(results).length; i++){
+            var key = Object.keys(results)[i];
+            var video = results[key];
+            var route = "video/" + video.info.id;
+            video.info.src = $sce.trustAsResourceUrl(route);
+        }
         $scope.$apply(function() {
             $scope.results = results;
         });
