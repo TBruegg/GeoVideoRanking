@@ -2,9 +2,11 @@
  * Created by Tobi on 15.09.2016.
  */
 
-angular.module('main').controller('mapCtrl', function($scope, $http, queryService){
+angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope, queryService, resultPanelService){
     // Initialize map
     var map = L.map('map').setView([1.285611, 103.856377], 13);
+    $rootScope.map = map;
+    $rootScope.L = L;
     var baseLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     });
@@ -12,6 +14,7 @@ angular.module('main').controller('mapCtrl', function($scope, $http, queryServic
 
     // Feature groups for query region and video marker, layer control, object for query
     var drawnItems = new L.FeatureGroup();
+    $rootScope.drawnItems = drawnItems;
     var videoMarkers = new L.FeatureGroup();
     var layerControl = L.control.layers({},{"Query Polygons":drawnItems, "Videos":videoMarkers},{position:'bottomleft'}).addTo(map);
     var queryJson = {};
