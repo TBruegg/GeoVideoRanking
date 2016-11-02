@@ -59,7 +59,7 @@ angular.module('main').factory('queryService', function ($http, $rootScope) {
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
         var query = `[out:json][timeout:10];way(${lat-r},${lng-r},${lat+r},${lng+r})["building"];(._;>;);out;`;
-        console.log(lat + ", " + lng);
+        console.log(lat + ", " + lng); 
         var features = overpassRequest(overpassURL+query, osmToGeoJSON);
         drawBuildings(features);
         $rootScope.map.off('click', onFeatureSelect);
