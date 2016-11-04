@@ -179,15 +179,87 @@ var sh_t = function (h, delta_alpha) {
 /*********************************************************
  * 3.9 Solar elevation angle, without refraction correction
  *********************************************************/
+var solarElevationAngle = function (phi, delta_t, ch_t) {
+    var e0 = Math.asin(Math.sin(phi) * Math.sin(delta_t) + Math.cos(phi) * Math.cos(delta_t) * ch_t);
+    return e0;
+};
 
 /*********************************************************
  * 3.10 Atmospheric refraction correction to the solar elevation
  *********************************************************/
+var solarElevationCorrection = function (P, T, e0) {
+    var delta_e = 0.084217 * P / (273 + T) / math.tan(e0 + 0.0031376 / (e0 + 0.089186));
+    return delta_e;
+};
 
 /*********************************************************
  * 3.11 Local topocentric sun coordinates
  *********************************************************/
 
+// 3.11.1 Zenith
+var zenith = function (e0, delta_e) {
+    var z = Math.PI / 2 - e0 - delta_e;
+    return z;
+};
+
+// 3.11.2 Azimuth
+var azimuth = function (sh_t, ch_t, phi, delta_t) {
+    var gammaL = Math.atan2(sh_t, ch_t * Math.sin(phi) - Math.sin(delta_t) / Math.cos(delta_t) * Math.cos(phi));
+    return gammaL;
+};
+
 /*********************************************************
- *
+ * SUNET AND SUNRISE CALCULATIONS
  *********************************************************/
+
+// Calculate the nutation in longitude, delta psi (in degrees)
+
+var X = function(int, JCE){
+    return {
+        0: 297.85036 + 445267.111480 * JCE - 0.0019142 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 189474,
+        1: 357.52772 + 35999.050340 * JCE - 0.0001603 * Math.pow(JCE, 2) - (Math.pow(JCE, 3)) / 300000,
+        2: 134.96298 + 477198.867398 * JCE + 0.0086972 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 56250,
+        3: 93.27191 + 483202.017538 * JCE - 0.0036825 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 327270,
+        4: 125.04452 - 1934.136261 * JCE + 0.0020708 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 450000
+    }[int]
+};
+
+var deltaPsiAt = function (i, JCE) {
+    var a = nutations[i][5];
+    var b = nutations[i][6];
+    var xy = 0;
+    for(var j=0; j<4+1; j++){
+        xy = xy + (X(j, JCE) * nutations[i][j]);
+    }
+    var deltaPsi = (a + b * JCE) * Math.sin(xy);
+    return deltaPsi;
+};
+
+var nutationInLongitude = function (JCE) {
+    var numerator = 0;
+    for(var i=0; i<nutations.length; i++){
+        numerator = numerator + deltaPsiAt(i, JCE);
+    }
+    return numerator / 36000000;
+};
+
+var deltaEpsilonAt = function(i, JCE) {
+    var c = nutations[i][7];
+    var d = nutations[i][8];
+    var xy = 0;
+    for(var j=0; j<4 + 1; j++) {
+        xy = xy + (X(j, JCE) * nutations[i][j]);
+    }
+    deltaEpsilon = (c + d * JCE) * Math.cos(xy);
+    return deltaEpsilon;
+};
+
+var nutationInObliquity = function (JCE) {
+    var numerator = 0;
+    for(var i=0; i<nutations.length; i++){
+        numerator = numerator + deltaEpsilonAt(i, JCE);
+    }
+    return numerator / 36000000;
+};
+
+// lighting_conditions.py Zeile 352
