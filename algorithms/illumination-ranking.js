@@ -3,7 +3,8 @@
  */
 
 var turf = require('turf');
-var helpers = require('./geo-algorithms');
+var geo = require('./geo-algorithms');
 var nutations = require('./nutations');
 var equations = require('./solar-equations');
+var helpers = require('./helpers');
 

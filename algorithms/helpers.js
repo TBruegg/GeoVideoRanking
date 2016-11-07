@@ -54,8 +54,8 @@ exports.limitZero2One = function (value) {
 };
 
 // Convert fraction of day to local hour value
-exports.dayfracToLocalHr = function (dacfrac, timezone) {
-    return 24.0 * limitZero2One(dayfrac + timezone / 24.0);
+exports.dayfracToLocalHr = function (dayfrac, timezone) {
+    return 24.0 * exports.limitZero2One(dayfrac + timezone / 24.0);
 };
 
 // Convert timestamp to local hour value
@@ -65,7 +65,7 @@ exports.timeToLocalHr = function(hour, minute, second){
 
 // Return timestring for given fraction of day
 exports.timestring = function (dayfrac) {
-    return `${Math.floor(dayfrac)}:${Math.floor(dayfrac%1*60)}:${Math.floor((dayfrac%1*60)%1*60)}`;
+    return Math.floor(dayfrac) + ":" + Math.floor(dayfrac%1*60) + ":" + Math.floor((dayfrac%1*60)%1*60);
 };
 
 

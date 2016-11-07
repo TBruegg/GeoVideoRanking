@@ -12,12 +12,17 @@ var wkx = require('wkx');
 var q = require('q');
 var io = require('socket.io')(http);
 
+// Require algorithms
+var illuminationRanking = require('./algorithms/illumination-ranking');
+
 var algorithms = require('./algorithms/geo-algorithms');
 var ranking = require('./algorithms/basic-ranking');
 
 var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
 var fovTableName = "fovpolygons_90";
+
+
 
 // API ROUTES
 // ----------------------------------------------------------------
