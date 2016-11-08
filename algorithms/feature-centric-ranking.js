@@ -15,22 +15,32 @@ exports.calculateRankScores = function (video, query) {
     var fovCollection = {"type": "FeatureCollection", "features": video.fovs};
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
+    var rDist = 0, rIl = 0, rVis = 0;
     loadObjects(M).then(function (objects) {
             var videoObjects = objects;
             for(var i = 0; i < n; i++){
                 var fov = video["fovs"][i];
-                var P = fov.properties["camera_location"];
+                var P = {
+                    "type":"Feature",
+                    "properties": {},
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [fov.properties["latitude"], fov.properties["latitude"]]
+                    }
+                };
                 var d = fov.properties["heading"];
                 var M1 = turf.bboxPolygon(turf.bbox(fov));
                 var fovObjects = [];
                 if(turf.intersect(M1,fov) != undefined){
-                    for(var j=0; j< videoObjects.features.length; j++) {
+                    for(var j=0; j < videoObjects.features.length; j++) {
                         var currentObj = videoObjects.features[j];
                         if (turf.intersect(fov, currentObj) != undefined){
                             fovObjects.push(currentObj);
                         }
                     }
-                    // borderPoints = borderPoints(query, P, d);
+                    var borderPoints = borderPoints(fov, query);
+                    console.log("TEst");
+                    rIl += illuminationRanking.illuminationRank(video, query);
                 }
             }
         }
@@ -106,10 +116,9 @@ var overpassRequest = function (host, query) {
         });
     });
     req.on("error", function (err) {
-        console.log("An error occured during object retrieval");
-        console.log(err.message);
-        defer.reject(err);
-        throw err;
+          console.log(err.message);
+    //      defer.reject(err);
+    //      throw err;
     });
     req.end();
     return defer.promise;
@@ -123,13 +132,14 @@ var borderPoints = function (fov, query) {
     var cornerPoints = turf.explode(Q)["features"];
     for(var i=0; i<cornerPoints.length; i++){
         var vertex = cornerPoints[i];
+        var angle = normalizedAngle(turf.bearing(P, vertex)-d);
+        var angleL = 0, angleR = 0, pointL = undefined, pointR = undefined;
         if(i == 0){
-            var angleL = normalizedAngle(turf.bearing(P, vertex)-d);
-            var angleR = normalizedAngle(turf.bearing(P, vertex)-d);
-            var pointR = vertex;
-            var pointL = vertex;
+            angleL = angle;
+            angleR = angle;
+            pointR = vertex;
+            pointL = vertex;
         } else {
-            var angle =  normalizedAngle(turf.bearing(P, vertex)-d);
             if(angle < angleL){
                 angleL = angle;
                 pointL = vertex;

@@ -65,7 +65,8 @@ exports.calculate = function(date, lat, lng, z, tz) {
     return result;
 };
 
-var IlluminationRank = function (geovideo) {
+exports.illuminationRank = function (geovideo) {
+    var fovCollection = {"type": "FeatureCollection", "features": geovideo.fovs};
     var time = geovideo.info["starttime"] + geovideo.info["duration"]/2;
     var date = new Date(time);
     var utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
