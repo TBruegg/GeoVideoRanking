@@ -14,6 +14,7 @@ var io = require('socket.io')(http);
 
 // Require algorithms
 var illuminationRanking = require('./algorithms/illumination-ranking');
+var featureCentricRanking = require('./algorithms/feature-centric-ranking');
 
 var algorithms = require('./algorithms/geo-algorithms');
 var ranking = require('./algorithms/basic-ranking');
@@ -47,7 +48,7 @@ app.get('/video/:id', function (req,res) {
         var start = parseInt(partialstart, 10);
         var end = partialend ? parseInt(partialend, 10) : total-1;
         var chunksize = (end-start)+1;
-        console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
+        // console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
         var file = fs.createReadStream(filePath, {start: start, end: end});
         res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
@@ -74,7 +75,7 @@ app.get('/api/polygonQuery', function (req,res) {
     var queryResults = {};
     var polygonGeoJSON = wkx.Geometry.parseGeoJSON(queryRegion.geometry);
     var polygonWkt = polygonGeoJSON.toWkt();
-    var queryString = "SELECT DISTINCT v.id, ST_AsGeoJSON(v.initial_location) FROM points as p " +
+    var queryString = "SELECT DISTINCT v.id, ST_AsGeoJSON(v.initial_location) as geometry FROM points as p " +
                 "INNER JOIN " + fovTableName + " as f ON f.camera_location = p.id " +
                 "INNER JOIN videos as v ON p.video = v.id " +
                 "WHERE ST_Overlaps(f.geometry, ST_GeomFromText('" + polygonWkt + "',4326));";
@@ -97,10 +98,12 @@ app.get('/api/polygonQuery', function (req,res) {
                     var key = Object.keys(queryResults)[i];
                     var video = queryResults[key];
                     var rankScores = ranking.calculateRankScores(video, queryRegion);
+                    var featureCentricRankScores = featureCentricRanking.calculateRankScores(video, queryRegion);
                     video['rankings'] = {};
                     for(var j=0; j < Object.keys(rankScores).length; j++){
                         var rkey = Object.keys(rankScores)[j];
-                        video.rankings[rkey] = rankScores[rkey];
+                        video.rankings[rkey] = Math.round(rankScores[rkey]*100)/100;
+                        //video.rankings[rkey] = rankScores[rkey];
                     }
                     console.log(JSON.stringify(video['rankings']));
                     console.log("Calculated rank scores for " + key);
@@ -150,7 +153,8 @@ var videoInfo = function (id) {
     var defer = q.defer();
     var dbClient = new pg.Client(dbConnectionString);
     dbClient.connect();
-    var queryString = "SELECT * FROM videos WHERE id = '" + id + "'";
+    var queryString = "SELECT id, file, os, duration, min_height, min_width, ST_asGeoJSON(initial_location) as geometry, " +
+                      "orientation, starttime, gps_accuracy, geomagnetic_declination FROM videos WHERE id = '" + id + "'";
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
         videoInfo = row;

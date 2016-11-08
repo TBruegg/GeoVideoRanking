@@ -4,7 +4,7 @@
 
 angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope, queryService, resultPanelService){
     // Initialize map
-    var map = L.map('map').setView([1.285611, 103.856377], 13);
+    var map = L.map('map').setView([1.2871374742069617, 103.86577606201172], 15);
     $rootScope.map = map;
     $rootScope.L = L;
     var baseLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -29,8 +29,8 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
     };
     var drawMarker = function(obj) {
         id = obj['id'];
-        console.log(obj['st_asgeojson']);
-        geometry = JSON.parse(obj['st_asgeojson']);
+        console.log(obj['geometry']);
+        geometry = JSON.parse(obj['geometry']);
         marker = L.geoJson(geometry);
         videoMarkers.addLayer(marker);
         marker.bindPopup('ID: ' + obj['id']);

@@ -7,12 +7,14 @@
         </tr>
         <tr>
             <td>
-                <video ng-attr-id="{{'video_'+value.info.id}}" type="video/mp4" width="400px">
-                    <source type="video/mp4" ng-src="{{value.info.src}}"></source>
+                <video ng-attr-id="{{'video_'+value.info.id}}" type="video/mp4" style="width:150px;">
+                    <source type="video/mp4" ng-src="{{value.info.src}}"/>
                 </video>
             </td>
             <td>
-                <table>
+                <table style="margin-left: 20px">
+                    <col width="80">
+                    <col width="170">
                     <tr ng-repeat="(key,value) in value.rankings">
                         <td><strong>{{key}}</strong></td>
                         <td>{{value}}</td>

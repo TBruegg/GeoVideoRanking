@@ -117,32 +117,28 @@ sceneIntersect = function(query, fov){
     console.log(JSON.stringify(fov.properties.id));
     var qVertices = polygonVertices(qPolygon)['features'];
     var qEdges = polygonEdges(qPolygon);
-
     // FOV model parameters (6)
     var cameraLocation = asPoint(fovScene.properties['latitude'], fovScene.properties['longitude']);
     var direction = fovScene.properties['heading'];
     var visibleDistance = fovScene.properties['visible_distance'];
     var visibleAngle = fovScene.properties['viewable_angle'];
-
     // FOVScene for which rankscore is calculated (3)
     var fovCorners = fovCornerPoints(cameraLocation, direction, visibleAngle, visibleDistance);
     var fovEdges = [asLine(fovCorners[0],fovCorners[1]), asLine(fovCorners[0],fovCorners[2])];
-
     if(turf.intersect(cameraLocation, qPolygon)){
         return true;
     }
-
-        for(var i=0; i < qVertices.length; i++){
-            // TODO: Eventuell pointFOVIntersect anstelle von pointFOVIntersect2 verwenden
-            if(pointFOVIntersect2(qVertices[i],fov)){
-                return true;
-            }
+    for(var i=0; i < qVertices.length; i++){
+        // TODO: Eventuell pointFOVIntersect anstelle von pointFOVIntersect2 verwenden
+        if(pointFOVIntersect2(qVertices[i],fov)){
+            return true;
         }
-        for (var j = 0; j < qEdges.length; j++) {
-            if (edgeFOVIntersect(qEdges[j], fov)) {
-                return true;
-            }
+    }
+    for (var j = 0; j < qEdges.length; j++) {
+        if (edgeFOVIntersect(qEdges[j], fov)) {
+            return true;
         }
+    }
     return false;
 };
 

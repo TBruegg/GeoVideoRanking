@@ -19,18 +19,20 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
 
     socket.on('rankingFinished', function (results) {
         console.log("Ranking done");
+        var videoList = [];
         for(var i=0; i<Object.keys(results).length; i++){
             var key = Object.keys(results)[i];
             var video = results[key];
             var route = "video/" + video.info.id;
             video.info.src = $sce.trustAsResourceUrl(route);
+            videoList.push(video);
         }
         $scope.$apply(function() {
-            $scope.results = results;
+            $scope.results = videoList;
         });
-        console.log($scope.results);
+        // console.log($scope.results);
         $("#loadingPage").css('display', 'none');
         $("#resultPage").css('display', 'block');
-        console.log("resultsPage:display -> " + $("#resultPage").css('display'));
+        // console.log("resultsPage:display -> " + $("#resultPage").css('display'));
     });
 });

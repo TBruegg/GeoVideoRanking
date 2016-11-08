@@ -254,7 +254,7 @@ var deltaEpsilonAt = function(i, JCE) {
     return deltaEpsilon;
 };
 
-var nutationInObliquity = function (JCE) {
+exports.nutationInObliquity = function (JCE) {
     var numerator = 0;
     for(var i=0; i<nutations.length; i++){
         numerator = numerator + deltaEpsilonAt(i, JCE);
@@ -264,7 +264,7 @@ var nutationInObliquity = function (JCE) {
 
 // lighting_conditions.py Zeile 352
 
-var localHourAngle = function (latitude, delta) {
+exports.localHourAngle = function (latitude, delta) {
     var h0base = -0.8333;
     var h0 = Math.acos((Math.sin(helpers.deg2rad(h0base)) - Math.sin(helpers.deg2rad(latitude)) * Math.sin(delta)) / (
         Math.cos(helpers.deg2rad(latitude)) * Math.cos(delta)));
@@ -276,7 +276,7 @@ var meanSiderealTimeAtGreenwich = function(jd, jc) {
     return v0;
 };
 
-var sidTimeAtGreenwich = function (date, lat, lng, data, timezone) {
+exports.sidTimeAtGreenwich = function (date, lat, lng, data, timezone) {
     var params = data
 
     var tg = params["tg"];
@@ -296,7 +296,7 @@ var sidTimeAtGreenwich = function (date, lat, lng, data, timezone) {
     return v;
 };
 
-var calcSolarTransit = function (longitude, alpha, siderealTime) {
+exports.calcSolarTransit = function (longitude, alpha, siderealTime) {
     var v = siderealTime;
 
     // Calculate the approximate sun transit time, m0, in fraction of day
@@ -309,19 +309,19 @@ var calcSolarTransit = function (longitude, alpha, siderealTime) {
     return transit;
 };
 
-var calcSunrise = function(transit, localHourAngle) {
+exports.calcSunrise = function(transit, localHourAngle) {
     localHourAngle = helpers.limitDegrees(helpers.rad2deg(localHourAngle));
     var sunrise = helpers.limitZero2One(transit - localHourAngle / 360.0);
     return sunrise;
 };
 
-var calcSunset = function (transit, localHourAngle) {
+exports.calcSunset = function (transit, localHourAngle) {
     localHourAngle = helpers.limitDegrees(helpers.rad2deg(localHourAngle));
     var sunset = helpers.limitZero2One(transit + localHourAngle / 360.0);
     return sunset;
 };
 
-var calcParameters = function (date, deltaT, lat, lng, P, T) {
+exports.calcParameters = function (date, deltaT, lat, lng, P, T) {
     var result = {};
     result["tg"] = calcTg(date);
     result["t"] = calcT(result["tg"], deltaT);
@@ -351,71 +351,5 @@ var calcParameters = function (date, deltaT, lat, lng, P, T) {
 };
 
 
-exports.calculate = function(date, lat, lng, z, tz) {
-    var data = {
-        "delta_t": 67,
-        "P": 0.809277,
-        "T": 11.00,
-        "longitude": lng,
-        "latitude": lat,
-        "altitude": z || 0,
-        "slope": 30.0,
-        "surface_azimuth_rotation": -10.0,
-        "timezone": tz || 0
-    };
-    data["params"] = calcParameters(date, data["delta_t"], data["latitude"], data["longitude"], data["P"], data["T"]);
-    data["RTS"] = {};
 
-    var transitDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
-    var transitData = calcParameters(transitDate, data["delta_t"], data["latitude"], data["longitude"], data["P"], data["T"]);
-    var siderealTime = sidTimeAtGreenwich(transitDate, lat, lng, transitData, tz);
-    var hourAngle = localHourAngle(lat, transitData["delta"]);
-
-    var transit = calcSolarTransit(lng, transitData["alpha"], siderealTime);
-    var sunrise = calcSunrise(transit, hourAngle);
-    var sunset = calcSunset(transit, hourAngle);
-
-    var transit_hours = helpers.dayfracToLocalHr(transit, tz);
-    var sunrise_hours = helpers.dayfracToLocalHr(sunrise, tz);
-    var sunset_hours = helpers.dayfracToLocalHr(sunset, tz);
-
-    console.log("Transit: " + helpers.timestring(transit_hours));
-    console.log("Sunrise: " + helpers.timestring(sunrise_hours));
-    console.log("Sunset: " + helpers.timestring(sunset_hours));
-
-    data["RTS"]["transit"] = transit;
-    data["RTS"]["sunrise"] = sunrise;
-    data["RTS"]["sunset"] = sunset;
-
-    Object.keys(data["params"]).forEach(function(key) {
-        if(["alpha", "epsilon", "z", "h", "L", "alpha_t", "h_t"].indexOf(key) >= 0) {
-            console.log(key + ": " + helpers.limitDegrees(helpers.rad2deg(data["params"][key])));
-        } else if(["delta", "gammaL"].indexOf(key) >= 0){
-            console.log(key + ": " +  helpers.rad2deg(data["params"][key]));
-        } else if(!(["gamma", "phi", "delta_alpha", "t", "tg", "sh_t", "ch_t", "delta_gamma", "e0", "delta_e", "delta_t"].indexOf(key)>= 0)){
-            console.log(key +  ": " + data["params"][key]);
-        }
-    });
-
-    var result = {
-        "azimuth": data["params"]["azimuth"],
-        "elevation": data["params"]["elevation"],
-        "transit": data["RTS"]["transit"],
-        "sunrise": data["RTS"]["sunrise"],
-        "sunset": data["RTS"]["sunset"]
-    };
-
-    return result;
-};
-
-// Date has to be given in UTC since in general javascript assumes dates to be given in the browser's local timezone
-var DATE = new Date(Date.UTC(2003, 10-1, 17, 19, 30, 30));
-var LATITUDE = 39.742476;
-var LONGITUDE = -105.1786;
-var Z = 1830.14;
-var TZ = 0;
-
-console.time("calc");
-exports.calculate(DATE, LATITUDE, LONGITUDE, Z, TZ);
-console.timeEnd("calc");
 

@@ -139,7 +139,9 @@ calculateRankScores = function(video,query){
         }
         rta = turf.area(turf.convex(rtaPoly));
     }
-    return {"rta": rta, "rsa": rsa, "rd": rd};
+    console.log("Return scores for " + video.info.id);
+    console.log(JSON.stringify({"RTA": rta, "RSA": rsa, "RD": rd}));
+    return {"RTA": rta, "RSA": rsa, "RD": rd};
 };
 
 module.exports = {
