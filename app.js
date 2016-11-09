@@ -94,22 +94,48 @@ app.get('/api/polygonQuery', function (req,res) {
                 // TODO: Nur an zugehörigen Client senden
                 io.emit('loadUpdate', 'Calculating rank scores...');
                 var queryResults = geoVideoCollection;
-                for(var i=0; i < Object.keys(queryResults).length; i++){
-                    var key = Object.keys(queryResults)[i];
-                    var video = queryResults[key];
-                    var rankScores = ranking.calculateRankScores(video, queryRegion);
-                    var featureCentricRankScores = featureCentricRanking.calculateRankScores(video, queryRegion);
-                    video['rankings'] = {};
-                    for(var j=0; j < Object.keys(rankScores).length; j++){
-                        var rkey = Object.keys(rankScores)[j];
-                        video.rankings[rkey] = Math.round(rankScores[rkey]*100)/100;
-                        //video.rankings[rkey] = rankScores[rkey];
+
+                (function(){
+                    var defer = q.defer();
+                    var counter = 0;
+                    for(var i=0; i < Object.keys(queryResults).length; i++){
+                        var key = Object.keys(queryResults)[i];
+                        var video = queryResults[key];
+                        video.info["geometry"] = JSON.parse(video.info["geometry"]);
+
+                        (function (i, video) {
+                            var rankScores = ranking.calculateRankScores(video, queryRegion);
+                            var featureCentricRankScores = {};
+                            featureCentricRanking.calculateRankScores(video, queryRegion).then(
+                                function (scores) {
+                                    for(var key in scores){
+                                        rankScores[key] = scores[key];
+                                    }
+                                    console.log(i + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
+                                    video['rankings'] = {};
+                                    for(var j=0; j < Object.keys(rankScores).length; j++){
+                                        var rkey = Object.keys(rankScores)[j];
+                                        video.rankings[rkey] = Math.round(rankScores[rkey]*100)/100;
+                                        //video.rankings[rkey] = rankScores[rkey];
+                                    }
+                                    //console.log(JSON.stringify(video['rankings']));
+                                    //console.log("Calculated rank scores for " + Object.keys(video.info.id));
+                                    if(counter == Object.keys(queryResults).length-1) {
+                                        defer.resolve(queryResults);
+                                    } else {
+                                        console.log("Processed video " + (i+1) + "/" + Object.keys(queryResults).length);
+                                    }
+                                    counter++;
+                                }
+                            );
+                        })(i, video);
                     }
-                    console.log(JSON.stringify(video['rankings']));
-                    console.log("Calculated rank scores for " + key);
-                }
+                    return defer.promise;
+                })().then(function (queryResults) {
+                        io.emit('rankingFinished', queryResults);
+                });
                 // TODO: Nur an zugehörigen Client senden
-                io.emit('rankingFinished', queryResults);
+                //io.emit('rankingFinished', queryResults);
                 // testing.txt goes here
             }
         );
@@ -173,28 +199,32 @@ var createVideoStore = function (results) {
     for (var i in results['result']) {
         videoId = results['result'][i].id;
         console.log(videoId);
-        videoInfo(videoId).then(
-            function (info) {
-                if (!fovStore[info.id]){
-                    fovStore[info.id] = {};
-                    fovStore[info.id]['info'] = info;
-                } else {
-                    fovStore[info.id]['info'] = info;
+        (function (i) {
+            videoInfo(videoId).then(
+                function (info) {
+                    if (!fovStore[info.id]) {
+                        fovStore[info.id] = {};
+                        fovStore[info.id]['info'] = info;
+                    } else {
+                        fovStore[info.id]['info'] = info;
+                    }
+                    fovStore[info.id]['fovs'] = {};
+                    return videoInfo(videoId);
                 }
-                fovStore[info.id]['fovs'] = {};
-                return videoInfo(videoId);
-            }
-        ).then(videoFOVs(videoId).then(
-            function (fovList) {
-                fovStore[fovList['id']]['fovs'] = fovList['fovs'];
-                ++it;
-                if(it == results['result'].length){
-                    defer.resolve(fovStore);
-                } else {
-                    console.log(i);
+            ).then(videoFOVs(videoId).then(
+                function (fovList) {
+                    fovStore[fovList['id']]['fovs'] = fovList['fovs'];
+                    ++it;
+                    if (it == results['result'].length) {
+                        defer.resolve(fovStore);
+                    } else {
+                        console.log("it: " + it + "/" + results['result'].length);
+                        console.log("i: " + i + "/" + results['result'].length);
+                        console.log("--------");
+                    }
                 }
-            }
-        ));
+            ));
+        })(i);
     }
     return defer.promise;
 };
