@@ -5,9 +5,9 @@
 var q = require('q');
 var geo = require('./geo-algorithms');
 var turf = require('turf');
+var helpers = require('./helpers');
 
-
-exports.calcOptimalDistance = function (fov, Q, brdrPts) {
+exports.distanceRank = function (fov, Q, brdrPts) {
     var d = fov.properties["heading"];
     var theta = fov.properties["viewable_angle"];
     var P = {
@@ -26,16 +26,14 @@ exports.calcOptimalDistance = function (fov, Q, brdrPts) {
     var N0 = nearestPoint(Q, P);
 
     // Calculate angles between P and the specified points and rotate them so that the repsective FOV points towards east
-    var angleL = (turf.bearing(P, L0) + (90 - d)) % 180;
-    var angleR = (turf.bearing(P, R0) + (90 - d)) % 180;
-    var angleN = (turf.bearing(P, N0) + (90 - d)) % 180;
+    var angleL = helpers.limitDegrees180((turf.bearing(P, L0) + (90 - d)));
+    var angleR = helpers.limitDegrees180((turf.bearing(P, R0) + (90 - d)));
 
     // Calculate new positions for rotated FOV
     var L = turf.destination(P, turf.distance(P, L0), angleL);
     var R = turf.destination(P, turf.distance(P, R0), angleR);
-    var N = turf.destination(P, turf.distance(P, N0), angleN);
 
-    // Calculate Y values for border points and X value for the polygon's closest vertex towards P
+    // Calculate Y values for border points and X value for the polygon's closest vertex towards P (in meters)
     var Lh = turf.distance({
         "type": "Feature",
         "geometry": {
@@ -43,7 +41,15 @@ exports.calcOptimalDistance = function (fov, Q, brdrPts) {
             "coordinates": [P.geometry.coordinates[0], L.geometry.coordinates[1]]
         },
         "properties": {}
-    }, P);
+    }, P)*1000;
+    var Lw = turf.distance({
+        "type": "Feature",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [L.geometry.coordinates[0], P.geometry.coordinates[1]]
+        },
+        "properties": {}
+    }, P)*1000;
     var Rh = turf.distance({
         "type": "Feature",
         "geometry": {
@@ -51,28 +57,33 @@ exports.calcOptimalDistance = function (fov, Q, brdrPts) {
             "coordinates": [P.geometry.coordinates[0], R.geometry.coordinates[1]]
         },
         "properties": {}
-    }, P);
-    var Nw = turf.distance({
+    }, P)*1000;
+    var Rw = turf.distance({
         "type": "Feature",
         "geometry": {
             "type": "Point",
-            "coordinates": [N.geometry.coordinates[0], P.geometry.coordinates[1]]
+            "coordinates": [R.geometry.coordinates[0], P.geometry.coordinates[1]]
         },
         "properties": {}
-    }, P);
+    }, P)*1000;
 
     // Transform FOV border angles from geographic to cartesian angles and calculate the distance
     var angL = transformAngle(((d - (theta/2)) + (90-d)) % 180);
     var angR = transformAngle(((d + (theta/2)) + (90-d)) % 180);
-    var DL = Lh/Math.tan(angL);
-    var DR = Rh/Math.tan(angR);
+    var DL = Math.abs(Lh/Math.tan(helpers.deg2rad(angL)));
+    var DR = Math.abs(Rh/Math.tan(helpers.deg2rad(angR)));
     var D0 = Math.max(DL,DR);
-    var distanceRank = D0 - Math.abs(Nw - D0);
+    // Calculate distance between nearest border point and nearest vertex
+    var dist = (DL > DR) ? Lw : Rw;
+    // Substract distance from calculated optimal distance
+    var distanceRank = Math.abs(D0-dist);
+    // Distance rank score is the difference of optimal distance and actual camera-feature distance
+    // var distanceRank = D - Math.abs(D - Nw);
     return distanceRank;
 };
 
 // Calculate the nearest vertex of the given polygon for the specified point
-var nearestPoint = function(polyon, point){
+var nearestPoint = function(polygon, point){
     var vertices = turf.explode(polygon).features;
     var dist = 0;
     var nearest = {};

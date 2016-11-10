@@ -5,6 +5,7 @@
 var illuminationRanking = require('./illumination-ranking');
 var distanceRanking = require('./distance-ranking');
 var geo = require('./geo-algorithms');
+var helpers = require('./helpers');
 var turf = require('turf');
 var exports = module.exports;
 var http = require('http');
@@ -35,21 +36,38 @@ exports.calculateRankScores = function (video, query) {
                 };
                 var M1 = turf.bboxPolygon(turf.bbox(fov));
                 (function (i, fov) {
-                    if(turf.intersect(M1,fov) != undefined){
-                        getSceneObjects(fov, videoObjects).then(function (fovObjects) {
-                            // Get right/left most vertices of Q
-                            // TODO: DepictionRank hinzufügen
-                            // depictionRank().then...;
-                            borderPoints(fov, query).then(function (borderPoints) {
-                                var d = fov.properties["heading"];
-                                rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
-                                rDist += distanceRanking.distanceRank(fov, query, borderPoints);
-                                if(i==n-1){
-                                    console.log("IlluminationRanking executed");
-                                    defer.resolve({"REl": rEl, "RAZ": rAz});
-                                }
+                    if(turf.intersect(M1,query) != undefined) {
+                        if(turf.intersect(fov,query) != undefined){
+                            //
+                            getSceneObjects(fov, videoObjects).then(function (fovObjects) {
+                                // Get right/left most vertices of Q
+                                // TODO: DepictionRank hinzufügen
+                                // depictionRank().then...;
+                                borderPoints(fov, query).then(function (borderPoints) {
+                                    var d = fov.properties["heading"];
+                                    rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
+                                    rDist += distanceRanking.distanceRank(fov, query, borderPoints);
+                                    if (i == n - 1) {
+                                        console.log("IlluminationRanking executed");
+                                        defer.resolve({
+                                                "REl": rEl,
+                                                "RAZ": rAz,
+                                                "rDist": rDist
+                                            }
+                                        );
+                                    }
+                                });
                             });
-                        });
+                        } else {
+                            if (i == n - 1) {
+                                defer.resolve({
+                                        "REl": rEl,
+                                        "RAZ": rAz,
+                                        "rDist": rDist
+                                    }
+                                );
+                            }
+                        }
                     }
                 })(i, fov);
 
@@ -183,7 +201,7 @@ var borderPoints = function (fov, query) {
     var angleL = 0, angleR = 0, pointL = undefined, pointR = undefined;
     for(var i=0; i<cornerPoints.length; i++){
         var vertex = cornerPoints[i];
-        var angle = normalizedAngle(turf.bearing(P, vertex)-d);
+        var angle = normalizedAngle(turf.bearing(P, vertex),d);
         if(i == 0){
             angleL = angle;
             angleR = angle;
@@ -206,10 +224,7 @@ var borderPoints = function (fov, query) {
     return defer.promise;
 };
 
-var normalizedAngle = function (angle) {
-    if(angle%360 <= 180){
-        return angle%360;
-    } else {
-        return angle%360-360;
-    }
+var normalizedAngle = function (angle, direction) {
+    angle = helpers.limitDegrees(angle);
+    return angle-direction;
 };
