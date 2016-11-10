@@ -71,6 +71,12 @@ body {
     margin-right: auto;
 }
 
+#noResultsHint {
+    margin-left: 35%;
+    width: 300px;
+    font-size: 15pt;
+}
+
 .navbar {
     margin-bottom: 0px;
     height: 50px;

@@ -3,6 +3,7 @@
  */
 
 var illuminationRanking = require('./illumination-ranking');
+var distanceRanking = require('./distance-ranking');
 var geo = require('./geo-algorithms');
 var turf = require('turf');
 var exports = module.exports;
@@ -42,6 +43,7 @@ exports.calculateRankScores = function (video, query) {
                             borderPoints(fov, query).then(function (borderPoints) {
                                 var d = fov.properties["heading"];
                                 rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
+                                rDist += distanceRanking.distanceRank(fov, query, borderPoints);
                                 if(i==n-1){
                                     console.log("IlluminationRanking executed");
                                     defer.resolve({"REl": rEl, "RAZ": rAz});

@@ -87,6 +87,10 @@ app.get('/api/polygonQuery', function (req,res) {
     query.on('end', function(){
         dbClient.end();
         res.json(results);
+        if(results["result"].length == 0){
+            io.emit('void', {});
+            return;
+        }
         io.emit('loadUpdate', 'Loading FOV data...');
         createVideoStore(results).then(
             function (geoVideoCollection) {

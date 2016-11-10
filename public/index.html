@@ -39,6 +39,7 @@
                 </div>
             </div>
             <div id="resultPage">
+                <p id="noResultsHint" ng-show="!haveResults()">No videos found!</p>
                 <table>
                   <tr ng-repeat="i in results">
                       <td>

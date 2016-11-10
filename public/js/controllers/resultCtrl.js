@@ -35,4 +35,16 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
         $("#resultPage").css('display', 'block');
         // console.log("resultsPage:display -> " + $("#resultPage").css('display'));
     });
+
+    socket.on('void', function (res) {
+        $scope.$apply(function() {
+            $scope.results = {};
+        });
+        $("#loadingPage").css('display', 'none');
+        $("#resultPage").css('display', 'block');
+    });
+
+    $scope.haveResults = function () {
+        return !$scope.results || Object.keys($scope.results).length;
+    }
 });
