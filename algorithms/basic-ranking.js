@@ -114,6 +114,9 @@ calculateRankScores = function(video,query){
             if (helpers.rectIntersect(M1, queryPolygon)) {
                 if (helpers.sceneIntersect(queryPolygon, FOV)) {
                     var oPoly = overlapBoundary(FOV, queryPolygon);
+                    if(oPoly == null){
+                        continue;
+                    };
                     // TODO: Ensure that time property is not null or undefined
                     var t1 = FOV.properties['time'];
                     var t2 = videoFOVs[i + 1].properties['time'];

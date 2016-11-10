@@ -52,7 +52,7 @@ exports.calculateRankScores = function (video, query) {
                                         defer.resolve({
                                                 "REl": rEl,
                                                 "RAZ": rAz,
-                                                "rDist": rDist
+                                                "RDist": rDist
                                             }
                                         );
                                     }
@@ -63,7 +63,7 @@ exports.calculateRankScores = function (video, query) {
                                 defer.resolve({
                                         "REl": rEl,
                                         "RAZ": rAz,
-                                        "rDist": rDist
+                                        "RDist": rDist
                                     }
                                 );
                             }
