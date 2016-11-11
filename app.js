@@ -221,11 +221,11 @@ var createVideoStore = function (results) {
                     ++it;
                     if (it == results['result'].length) {
                         defer.resolve(fovStore);
-                    } else {
+                    } /*else {
                         console.log("it: " + it + "/" + results['result'].length);
                         console.log("i: " + i + "/" + results['result'].length);
                         console.log("--------");
-                    }
+                    }*/
                 }
             ));
         })(i);

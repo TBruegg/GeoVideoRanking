@@ -24,6 +24,7 @@ exports.calculateRankScores = function (video, query) {
     rEl = rIl["el"];
     loadObjects(M).then(function (objects) {
             var videoObjects = objects;
+            var counter = 0;
             for(var i = 0; i < n; i++){
                 var fov = video["fovs"][i];
                 var P = {
@@ -44,33 +45,26 @@ exports.calculateRankScores = function (video, query) {
                                 // TODO: DepictionRank hinzufügen
                                 // depictionRank().then...;
                                 borderPoints(fov, query).then(function (borderPoints) {
+                                    console.log(counter);
                                     var d = fov.properties["heading"];
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
                                     rDist += distanceRanking.distanceRank(fov, query, borderPoints);
-                                    if (i == n - 1) {
-                                        console.log("IlluminationRanking executed");
-                                        defer.resolve({
-                                                "REl": rEl,
-                                                "RAZ": rAz,
-                                                "RDist": rDist
-                                            }
-                                        );
-                                    }
                                 });
                             });
-                        } else {
-                            if (i == n - 1) {
-                                defer.resolve({
-                                        "REl": rEl,
-                                        "RAZ": rAz,
-                                        "RDist": rDist
-                                    }
-                                );
-                            }
                         }
                     }
+                    if (counter == n - 1) {
+                        console.log("Feature ranking done");
+                        defer.resolve({
+                                "REl": rEl,
+                                "RAZ": rAz,
+                                "RDist": rDist
+                            }
+                        );
+                    } else {
+                        counter++;
+                    }
                 })(i, fov);
-
             }
         }
     );

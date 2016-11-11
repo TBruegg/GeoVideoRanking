@@ -107,14 +107,14 @@ exports.illuminationRank = function (geovideo) {
     var sunrise_hours = helpers.dayfracToLocalHr(sunrise, tz/60);
     var sunset_hours = helpers.dayfracToLocalHr(sunset, tz/60);
 
-    console.log("Transit: " + helpers.timestring(transit_hours));
-    console.log("Sunrise: " + helpers.timestring(sunrise_hours));
-    console.log("Sunset: " + helpers.timestring(sunset_hours));
+    //console.log("Transit: " + helpers.timestring(transit_hours));
+    //console.log("Sunrise: " + helpers.timestring(sunrise_hours));
+    //console.log("Sunset: " + helpers.timestring(sunset_hours));
 
     RTS["transit"] = transit;
     RTS["sunrise"] = sunrise;
     RTS["sunset"] = sunset;
-
+    /*
     Object.keys(parameters).forEach(function(key) {
         if(["alpha", "epsilon", "z", "h", "L", "alpha_t", "h_t"].indexOf(key) >= 0) {
             console.log(key + ": " + helpers.limitDegrees(helpers.rad2deg(parameters[key])));
@@ -124,7 +124,7 @@ exports.illuminationRank = function (geovideo) {
             console.log(key +  ": " + parameters[key]);
         }
     });
-
+    */
     var rankings = {
         "az": phi,
         "el": e

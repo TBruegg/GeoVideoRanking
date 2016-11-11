@@ -83,7 +83,7 @@ overlapBoundary = function(fov, query){
     // Old approach goes here
     // --> <--
 
-    if(overlapPoly.length > 0) {
+    if(overlapPoly.length >= 4) {
         overlapPoly = {"type": "FeatureCollection", "features": overlapPoly};
         overlapPoly = turf.convex(overlapPoly);
         return overlapPoly;
