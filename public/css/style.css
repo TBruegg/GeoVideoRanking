@@ -77,6 +77,10 @@ body {
     font-size: 15pt;
 }
 
+#orderForm {
+    margin-top: 15px;
+}
+
 .navbar {
     margin-bottom: 0px;
     height: 50px;
@@ -139,4 +143,5 @@ body {
 .resultItem table {
     text-align: left;
 }
+
 

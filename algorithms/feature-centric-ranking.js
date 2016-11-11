@@ -12,6 +12,7 @@ var http = require('http');
 var q = require('q');
 
 var OVERPASS_URL = "overpass-api.de";
+var CONNECTIONS = 0;
 
 exports.calculateRankScores = function (video, query) {
     var defer = q.defer();
@@ -46,9 +47,9 @@ exports.calculateRankScores = function (video, query) {
                                 // TODO: DepictionRank hinzufügen
                                 // depictionRank().then...;
                                 borderPoints(fov, query).then(function (borderPoints) {
-                                    console.log(i);
+                                    // console.log(i);
                                     var d = fov.properties["heading"];
-                                    rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
+                                    rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
                                     rDist += distanceRanking.distanceRank(fov, query, borderPoints);
                                     def.resolve();
                                 }).catch(console.log.bind(console));
@@ -77,14 +78,18 @@ exports.calculateRankScores = function (video, query) {
 var getSceneObjects = function (fov, videoObjects) {
     var defer =q.defer();
     var fovObjects = [];
-    for(var j=0; j < videoObjects.features.length; j++) {
-        var currentObj = videoObjects.features[j];
-        if (turf.intersect(fov, currentObj) != undefined){
-            fovObjects.push(currentObj);
+    if(Object.keys(videoObjects).length > 0) {
+        for (var j = 0; j < videoObjects.features.length; j++) {
+            var currentObj = videoObjects.features[j];
+            if (turf.intersect(fov, currentObj) != undefined) {
+                fovObjects.push(currentObj);
+            }
+            if (j == videoObjects.features.length - 1) {
+                defer.resolve(fovObjects);
+            }
         }
-        if(j == videoObjects.features.length-1){
-            defer.resolve(fovObjects);
-        }
+    } else {
+        defer.resolve({});
     }
     return defer.promise;
 };
@@ -98,9 +103,9 @@ var loadObjects = function (bBox) {
         overpassRequest(OVERPASS_URL, query).then(function (result) {
             objects = result;
             defer.resolve(objects);
-        });
+        }).catch(console.log.bind(console));
     } catch (e){
-        console.log("Error occurded: " + e.message);
+        console.log("Error occured: " + e.message);
     }
     return defer.promise;
 };
@@ -146,16 +151,18 @@ var overpassRequest = function (host, query) {
         host: host,
         path: query,
         port: 80,
-        method: 'GET',
+        method: 'GET'
     };
     console.log("Overpass Request");
     httpRequest(options).then(function (result) {
         defer.resolve(result);
-    });
+    }).catch(console.log.bind(console));
     return defer.promise;
 };
 
 var httpRequest = function (options) {
+    ++CONNECTIONS;
+    console.log("Open Connections: " + CONNECTIONS);
     var defer = q.defer();
     req = http.request(options, function (response) {
         console.log(options.host + ':' + response.statusCode);
@@ -172,10 +179,13 @@ var httpRequest = function (options) {
             } else {
                 defer.reject({});
             }
+            --CONNECTIONS;
         });
     });
     req.on("error", function (err) {
+        --CONNECTIONS;
         console.log(err.message);
+        defer.resolve({});
     });
     req.end();
     return defer.promise;

@@ -8,6 +8,7 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
     $scope.hint = "Loading...";
     $scope.results = undefined;
     $scope.sce = $sce;
+    $scope.orderKey = "REl" ||$("#orderSelect").val();
 
     // Socket events
     socket.on('loadUpdate', function (msg) {
@@ -28,7 +29,7 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
             videoList.push(video);
         }
         $scope.$apply(function() {
-            $scope.results = videoList;
+            $scope.results = videoList.sort($scope.sort);
         });
         // console.log($scope.results);
         $("#loadingPage").css('display', 'none');
@@ -46,5 +47,16 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
 
     $scope.haveResults = function () {
         return !$scope.results || Object.keys($scope.results).length;
+    };
+
+    $("#orderSelect").change(function (val) {
+        $scope.orderBy = $("#orderSelect").val();
+        $scope.$apply(function() {
+            $scope.results = $scope.results.sort($scope.sort);
+        });
+    });
+
+    $scope.sort = function(a,b){
+        return -(a.rankings[$scope.orderKey] - b.rankings[$scope.orderKey]);
     }
 });

@@ -92,7 +92,7 @@ angular.module('main').factory('queryService', function ($http, $rootScope) {
                 objects = result.data.result;
                 queryCallback(objects);
                 return result;
-            });
+            }).catch(console.log.bind(console));
         },
         onClick: function(e){
             $("#map").css("cursor", "-webkit-grab");

@@ -29,7 +29,7 @@ overlapBoundary = function(fov, query){
 
     // Check if any of the points in qVertices are within the FOVScene, if so add them to overlapPoly (6)
     // TODO: qVertices ist eine FeeatureCollection und kein Array!!!
-    for(i=0; i < qVertices.length-1; i++){
+    for(var i=0; i < qVertices.length-1; i++){
         if (helpers.pointFOVIntersect(qVertices[i],fovScene)){
             overlapPoly.push(qVertices[i]);
         }
@@ -83,7 +83,7 @@ overlapBoundary = function(fov, query){
     // Old approach goes here
     // --> <--
 
-    if(overlapPoly.length >= 4) {
+    if(overlapPoly.length >= 3) {
         overlapPoly = {"type": "FeatureCollection", "features": overlapPoly};
         overlapPoly = turf.convex(overlapPoly);
         return overlapPoly;
@@ -126,11 +126,18 @@ calculateRankScores = function(video,query){
                         try{
                             rtaPoly = turf.union(rtaPoly, oPoly);
                         } catch(e){
-                            console.log(e);
+                            console.log("Error: " + e);
                             try{
                                 oPoly = helpers.simplifyFeature(oPoly, 10);
                                 rtaPoly = turf.union(rtaPoly, oPoly);
+                                console.log("Resolved error by simplifying feature")
                             }catch (e){
+                                //var pointsRta = turf.explode(rtaPoly);
+                                //var pointsPoly = turf.explode(rtaPoly);
+                                //pointsRta.features.concat(pointsPoly.features);
+                                //rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
+                                oPoly = helpers.simplifyFeature(oPoly, 8);
+                                rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Simplification didn't resolve issue: " + e);
                             }
                         }
@@ -140,7 +147,7 @@ calculateRankScores = function(video,query){
                 }
             }
         }
-        rta = turf.area(turf.convex(rtaPoly));
+        rta = (rtaPoly!=undefined)? turf.area(turf.convex(rtaPoly)) : 0;
     }
     console.log("Return scores for " + video.info.id);
     console.log(JSON.stringify({"RTA": rta, "RSA": rsa, "RD": rd}));

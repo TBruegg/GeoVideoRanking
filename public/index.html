@@ -28,8 +28,20 @@
 <div id="map" ng-controller="mapCtrl"></div>
 <div id="result-container" ng-controller="resultCtrl">
     <div id="results" ng-hide="resultPanelService.isVisible()" class="animated">
-        <h3>Search Results</h3>
-        <hr>
+        <h3 style="float:left">Search Results</h3>
+        <div class="form-group" id="orderForm" style="float:right">
+            <label for="orderSelect" style="width:100px;display:inline;">Sort by:</label>
+            <select class="form-control" id="orderSelect" style="width:100px;display:inline;">
+                <option>RTA</option>
+                <option>RSA</option>
+                <option>RD</option>
+                <option>REl</option>
+                <option>RAZ</option>
+                <option>RDist</option>
+            </select>
+        </div>
+        <br>
+        <hr width="100%">
         <div id="resultContent">
             <div id="loadingPage">
                 <div class="loader"></div>
