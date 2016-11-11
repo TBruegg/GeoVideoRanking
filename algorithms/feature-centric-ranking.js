@@ -24,7 +24,8 @@ exports.calculateRankScores = function (video, query) {
     rEl = rIl["el"];
     loadObjects(M).then(function (objects) {
             var videoObjects = objects;
-            var counter = 0;
+            var def = q.defer();
+            var promises = [];
             for(var i = 0; i < n; i++){
                 var fov = video["fovs"][i];
                 var P = {
@@ -45,29 +46,31 @@ exports.calculateRankScores = function (video, query) {
                                 // TODO: DepictionRank hinzufügen
                                 // depictionRank().then...;
                                 borderPoints(fov, query).then(function (borderPoints) {
-                                    console.log(counter);
+                                    console.log(i);
                                     var d = fov.properties["heading"];
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth));
                                     rDist += distanceRanking.distanceRank(fov, query, borderPoints);
-                                });
-                            });
+                                    def.resolve();
+                                }).catch(console.log.bind(console));
+                            }).catch(console.log.bind(console));
+                            promises.push(def.promise);
+                        } else {
+                            promises.push(true);
                         }
-                    }
-                    if (counter == n - 1) {
-                        console.log("Feature ranking done");
-                        defer.resolve({
-                                "REl": rEl,
-                                "RAZ": rAz,
-                                "RDist": rDist
-                            }
-                        );
                     } else {
-                        counter++;
+                        promises.push(true);
                     }
                 })(i, fov);
             }
+            q.all(promises).then(function () {
+                defer.resolve({
+                    "REl": rEl,
+                    "RAZ": rAz,
+                    "RDist": rDist
+                })
+            }).catch(console.log.bind(console));
         }
-    );
+    ).catch(console.log.bind(console));
     return defer.promise;
 };
 

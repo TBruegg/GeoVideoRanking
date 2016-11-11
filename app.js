@@ -115,7 +115,7 @@ app.get('/api/polygonQuery', function (req,res) {
                                     for(var key in scores){
                                         rankScores[key] = scores[key];
                                     }
-                                    console.log(i + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
+                                    console.log((i+1) + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
                                     video['rankings'] = {};
                                     for(var j=0; j < Object.keys(rankScores).length; j++){
                                         var rkey = Object.keys(rankScores)[j];
@@ -131,13 +131,13 @@ app.get('/api/polygonQuery', function (req,res) {
                                     }
                                     counter++;
                                 }
-                            );
+                            ).catch(console.log.bind(console));
                         })(i, video);
                     }
                     return defer.promise;
                 })().then(function (queryResults) {
                         io.emit('rankingFinished', queryResults);
-                });
+                }).catch(console.log.bind(console));
                 // TODO: Nur an zugehörigen Client senden
                 //io.emit('rankingFinished', queryResults);
                 // testing.txt goes here
