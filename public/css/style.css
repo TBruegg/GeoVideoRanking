@@ -81,6 +81,22 @@ body {
     margin-top: 15px;
 }
 
+#selectFeatureButton {
+    position: absolute;
+    height: 28px;
+    width: 28px;
+    left: 9px;
+    top: 222px;
+    box-shadow: 1px 2px 1px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+img {
+    width: 15px;
+    float: left
+}
+
 .navbar {
     margin-bottom: 0px;
     height: 50px;

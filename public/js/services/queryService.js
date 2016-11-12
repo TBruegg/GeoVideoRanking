@@ -2,7 +2,7 @@
  * Created by Tobi on 15.09.2016.
  */
 
-angular.module('main').factory('queryService', function ($http, $rootScope) {
+angular.module('main').factory('queryService', function ($http, $rootScope, $q) {
     var queryButton = {};
     var queryJson = {};
     var queryCallback;
@@ -44,11 +44,12 @@ angular.module('main').factory('queryService', function ($http, $rootScope) {
         return geoJSON;
     };
     var overpassRequest = function (URL) {
+        var defer = $q.defer();
         $http.get(URL).then(function(result){
-            console.log(result);
             var features = osmToGeoJSON(result);
-            return features;
+            defer.resolve(features);
         });
+        return defer.promise;
     };
     var drawBuildings = function(geojson){
         var featureLayer = $rootScope.L.geoJson(geojson);
@@ -100,6 +101,7 @@ angular.module('main').factory('queryService', function ($http, $rootScope) {
         selectFeature: function () {
             $("#map").css("cursor", "crosshair");
             $rootScope.map.on('click', onFeatureSelect);
-        }
+        },
+        overpassRequest: overpassRequest
     };
 });

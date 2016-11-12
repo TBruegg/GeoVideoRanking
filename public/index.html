@@ -18,14 +18,18 @@
             <form class="navbar-form navbar-left">
                 <div class="form-group">
                     <button class="btn btn-default" ng-click="resultPanelService.toggleResults()">Toggle Search Results</button>
-                    <button id="selectFeatureButton" class="btn btn-default" ng-click="queryService.selectFeature()">Select Feature</button>
                     <button id="queryButton" class="btn btn-warning" ng-click="queryService.polygonQuery()">Search Videos</button>
                 </div>
             </form>
         </div>
     </div>
 </nav>
-<div id="map" ng-controller="mapCtrl"></div>
+<div ng-controller="mapCtrl">
+    <div id="map"></div>
+    <button id="selectFeatureButton" class="btn btn-default" ng-click="selectFeature()">
+        <img src="img/select.png">
+    </button>
+</div>
 <div id="result-container" ng-controller="resultCtrl">
     <div id="results" ng-hide="resultPanelService.isVisible()" class="animated">
         <h3 style="float:left">Search Results</h3>

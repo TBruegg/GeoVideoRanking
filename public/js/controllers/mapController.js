@@ -2,7 +2,7 @@
  * Created by Tobi on 15.09.2016.
  */
 
-angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope, queryService, resultPanelService){
+angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope, $q, queryService, resultPanelService){
     // Initialize map
     var map = L.map('map').setView([1.2871374742069617, 103.86577606201172], 15);
     $rootScope.map = map;
@@ -12,6 +12,7 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
     });
     baseLayer.addTo(map);
 
+    var overpassURL = "http://overpass-api.de/api/interpreter?data=";
     // Feature groups for query region and video marker, layer control, object for query
     var drawnItems = new L.FeatureGroup();
     $rootScope.drawnItems = drawnItems;
@@ -34,6 +35,15 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
         marker = L.geoJson(geometry);
         videoMarkers.addLayer(marker);
         marker.bindPopup('ID: ' + obj['id']);
+    };
+    var drawPolygon = function (polygon) {
+        var style = {
+            "color": "#ff7800",
+            "weight": 5,
+            "opacity": 0.65
+        };
+        var layer = L.geoJson(polygon, {style: style});
+        drawnItems.addLayer(layer);
     };
 
     // Add draw control to map
@@ -84,7 +94,6 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
             $scope.queryService.setQuery({});
         }
         $scope.queryService.toggleQueryButton(isVisible);
-        console.log(queryJson);
     });
 
     map.on('draw:created', function(e){
@@ -97,5 +106,29 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
         $scope.queryService.setQuery(queryJson);
     });
 
+    var onFeatureSelect = function (e) {
+        var r = 0.0003;
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var query = `[out:json][timeout:10];way(${lat-r},${lng-r},${lat+r},${lng+r})["building"];(._;>;);out;`;
+        console.log(lat + ", " + lng);
+        var features = queryService.overpassRequest(overpassURL+query, queryService.osmToGeoJSON);
+        features.then(function (features) {
+            drawnItems.clearLayers();
+            var building = features.features[0];
+            $scope.queryService.setQuery(building);
+            drawPolygon(building);
+            }
+        );
+        //L.geoJSON(features.features, {style: style}).addTo(map);
+        $rootScope.map.off('click', onFeatureSelect);
+        $("#map").css("cursor", "-webkit-grab");
+    };
+
+    $scope.selectFeature = function () {
+        console.log("select feature");
+        $("#map").css("cursor", "crosshair");
+        $rootScope.map.on('click', onFeatureSelect);
+    }
 
 });
