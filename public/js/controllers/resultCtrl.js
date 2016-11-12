@@ -9,14 +9,6 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
     $scope.results = undefined;
     $scope.sce = $sce;
     $scope.orderKey = "REl" ||$("#orderSelect").val();
-    $scope.selectOptions = [
-        { name: 'Area', value: 'RTA' },
-        { name: 'Duration', value: 'RD' },
-        { name: 'Summed Area', value: 'RSA' },
-        { name: 'Elevation', value: 'REl' },
-        { name: 'Azimuth', value: 'RAz' },
-        { name: 'Distance', value: 'RDist' }
-    ];
     $scope.item = "RTA";
 
 
@@ -58,12 +50,4 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
     $scope.haveResults = function () {
         return !$scope.results || Object.keys($scope.results).length;
     };
-    /*
-    $("#orderSelect").change(function (val) {
-        $scope.orderBy = $("#orderSelect").val();
-        $scope.$apply(function() {
-            $scope.results = $scope.results.sort($scope.sort);
-        });
-    });
-    */
 });

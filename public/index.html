@@ -59,7 +59,8 @@
                 <table>
                   <tr ng-repeat="i in results | resultFilter:item">
                       <td>
-                          <result-item value="i"></result-item>
+                          <result-item ng-mouseenter="drawPolygons(i.fovs)" ng-mouseleave="clearPolygons()"
+                                       value="i"></result-item>
                       </td>
                   </tr>
                 </table>

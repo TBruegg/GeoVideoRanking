@@ -15,9 +15,16 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
     var overpassURL = "http://overpass-api.de/api/interpreter?data=";
     // Feature groups for query region and video marker, layer control, object for query
     var drawnItems = new L.FeatureGroup();
+    var viewsheds = new L.FeatureGroup();
     $rootScope.drawnItems = drawnItems;
     var videoMarkers = new L.FeatureGroup();
-    var layerControl = L.control.layers({},{"Query Polygons":drawnItems, "Videos":videoMarkers},{position:'bottomleft'}).addTo(map);
+    var layerControl = L.control.layers({},{
+        "Query Polygons":drawnItems,
+        "Videos":videoMarkers,
+        "Viewsheds": viewsheds
+        },{
+            position:'bottomleft'
+        }).addTo(map);
     var queryJson = {};
 
     // Function definitions
@@ -30,22 +37,32 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
     };
     var drawMarker = function(obj) {
         id = obj['id'];
-        console.log(obj['geometry']);
+        // console.log(obj['geometry']);
         geometry = JSON.parse(obj['geometry']);
         marker = L.geoJson(geometry);
         videoMarkers.addLayer(marker);
         marker.bindPopup('ID: ' + obj['id']);
     };
-    var drawPolygon = function (polygon) {
+    var drawPolygon = function (polygon, leafletLayer) {
         var style = {
             "color": "#ff7800",
             "weight": 5,
             "opacity": 0.65
         };
         var layer = L.geoJson(polygon, {style: style});
-        drawnItems.addLayer(layer);
+        leafletLayer.addLayer(layer);
+    };
+    $rootScope.drawPolygons = function (polygonArray) {
+        $rootScope.clearPolygons();
+        for(var i in polygonArray){
+            var fov = polygonArray[i];
+            drawPolygon(fov, viewsheds);
+        }
     };
 
+    $rootScope.clearPolygons = function () {
+        viewsheds.clearLayers();
+    };
     // Add draw control to map
     var drawControl = new L.Control.Draw({
         edit: {
@@ -75,6 +92,7 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
 
     // Add feature groups and draw controls to map view
     map.addLayer(drawnItems);
+    map.addLayer(viewsheds);
     map.addLayer(videoMarkers);
     map.addControl(drawControl);
 
@@ -119,7 +137,7 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
                     drawnItems.clearLayers();
                     var building = features.features[0];
                     $scope.queryService.setQuery(building);
-                    drawPolygon(building);
+                    drawPolygon(building, drawnItems);
                 }
             });
         //L.geoJSON(features.features, {style: style}).addTo(map);
