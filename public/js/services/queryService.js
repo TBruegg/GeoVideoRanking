@@ -46,6 +46,9 @@ angular.module('main').factory('queryService', function ($http, $rootScope, $q) 
     var overpassRequest = function (URL) {
         var defer = $q.defer();
         $http.get(URL).then(function(result){
+            if(result.data.elements.length == 0){
+                defer.resolve(undefined);
+            }
             var features = osmToGeoJSON(result);
             defer.resolve(features);
         });

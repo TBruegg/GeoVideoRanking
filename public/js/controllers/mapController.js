@@ -113,13 +113,15 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
         var query = `[out:json][timeout:10];way(${lat-r},${lng-r},${lat+r},${lng+r})["building"];(._;>;);out;`;
         console.log(lat + ", " + lng);
         var features = queryService.overpassRequest(overpassURL+query, queryService.osmToGeoJSON);
-        features.then(function (features) {
-            drawnItems.clearLayers();
-            var building = features.features[0];
-            $scope.queryService.setQuery(building);
-            drawPolygon(building);
-            }
-        );
+            features.then(function (features) {
+                if(features != undefined) {
+                    console.log(features);
+                    drawnItems.clearLayers();
+                    var building = features.features[0];
+                    $scope.queryService.setQuery(building);
+                    drawPolygon(building);
+                }
+            });
         //L.geoJSON(features.features, {style: style}).addTo(map);
         $rootScope.map.off('click', onFeatureSelect);
         $("#map").css("cursor", "-webkit-grab");
