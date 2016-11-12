@@ -136,10 +136,10 @@ calculateRankScores = function(video,query){
                                 rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Resolved error by simplifying feature")
                             }catch (e){
-                                var pointsRta = turf.explode(rtaPoly);
-                                var pointsPoly = turf.explode(rtaPoly);
-                                pointsRta.features.concat(pointsPoly.features);
-                                rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
+                                //var pointsRta = turf.explode(rtaPoly);
+                                //var pointsPoly = turf.explode(rtaPoly);
+                                //pointsRta.features.concat(pointsPoly.features);
+                                //rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
                                 //oPoly = helpers.simplifyFeature(oPoly, 8);
                                 //rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Simplification didn't resolve issue: " + e);

@@ -35,7 +35,7 @@
         <h3 style="float:left">Search Results</h3>
         <div class="form-group" id="orderForm" style="float:right">
             <label for="orderSelect" style="width:100px;display:inline;">Sort by:</label>
-            <select class="form-control" id="orderSelect" style="width:100px;display:inline;" ng-model="sortBy">
+            <select class="form-control" id="orderSelect" style="width:100px;display:inline;" ng-model="item">
                 <option>RTA</option>
                 <option>RSA</option>
                 <option>RD</option>
@@ -57,7 +57,7 @@
             <div id="resultPage">
                 <p id="noResultsHint" ng-show="!haveResults()">No videos found!</p>
                 <table>
-                  <tr ng-repeat="i in results | resultFilter:sortBy">
+                  <tr ng-repeat="i in results | resultFilter:item">
                       <td>
                           <result-item value="i"></result-item>
                       </td>

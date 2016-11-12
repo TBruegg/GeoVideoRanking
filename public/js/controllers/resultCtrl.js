@@ -9,6 +9,16 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
     $scope.results = undefined;
     $scope.sce = $sce;
     $scope.orderKey = "REl" ||$("#orderSelect").val();
+    $scope.selectOptions = [
+        { name: 'Area', value: 'RTA' },
+        { name: 'Duration', value: 'RD' },
+        { name: 'Summed Area', value: 'RSA' },
+        { name: 'Elevation', value: 'REl' },
+        { name: 'Azimuth', value: 'RAz' },
+        { name: 'Distance', value: 'RDist' }
+    ];
+    $scope.item = "RTA";
+
 
     // Socket events
     socket.on('loadUpdate', function (msg) {
