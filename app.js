@@ -138,7 +138,7 @@ app.get('/api/polygonQuery', function (req,res) {
                     return defer.promise;
                 })().then(function (queryResults) {
                         io.emit('rankingFinished', queryResults);
-                })//.catch(console.log.bind(console));
+                });//.catch(console.log.bind(console));
                 // TODO: Nur an zugehörigen Client senden
                 //io.emit('rankingFinished', queryResults);
                 // testing.txt goes here

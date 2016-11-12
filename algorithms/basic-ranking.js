@@ -68,8 +68,12 @@ overlapBoundary = function(fov, query){
         }
     }
     if(intersectionsArc.length > 0) {
-        if (intersectionsArc.length == 2) {
+        if (intersectionsArc.length >= 2) {
             var a = helpers.estimateArc(intersectionsArc[0], intersectionsArc[1], cameraLocation);
+            for(var i=1; i<intersectionsArc.length-1; i++){
+                var a2 = helpers.estimateArc(intersectionsArc[i], intersectionsArc[i+1], cameraLocation);
+                a.geometry.coordinates.concat(a2.geometry.coordinates);
+            };
         } else if (intersectionsArc.length == 1) {
             var nf = helpers.pointPolygonIntersect(fovCorners[1], qPolygon) ? fovCorners[1] : fovCorners[2];
             var a = helpers.estimateArc(intersectionsArc[0], nf, cameraLocation);
@@ -132,12 +136,12 @@ calculateRankScores = function(video,query){
                                 rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Resolved error by simplifying feature")
                             }catch (e){
-                                //var pointsRta = turf.explode(rtaPoly);
-                                //var pointsPoly = turf.explode(rtaPoly);
-                                //pointsRta.features.concat(pointsPoly.features);
-                                //rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
-                                oPoly = helpers.simplifyFeature(oPoly, 8);
-                                rtaPoly = turf.union(rtaPoly, oPoly);
+                                var pointsRta = turf.explode(rtaPoly);
+                                var pointsPoly = turf.explode(rtaPoly);
+                                pointsRta.features.concat(pointsPoly.features);
+                                rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
+                                //oPoly = helpers.simplifyFeature(oPoly, 8);
+                                //rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Simplification didn't resolve issue: " + e);
                             }
                         }

@@ -31,7 +31,7 @@
         <h3 style="float:left">Search Results</h3>
         <div class="form-group" id="orderForm" style="float:right">
             <label for="orderSelect" style="width:100px;display:inline;">Sort by:</label>
-            <select class="form-control" id="orderSelect" style="width:100px;display:inline;">
+            <select class="form-control" id="orderSelect" style="width:100px;display:inline;" ng-model="sortBy">
                 <option>RTA</option>
                 <option>RSA</option>
                 <option>RD</option>
@@ -53,7 +53,7 @@
             <div id="resultPage">
                 <p id="noResultsHint" ng-show="!haveResults()">No videos found!</p>
                 <table>
-                  <tr ng-repeat="i in results">
+                  <tr ng-repeat="i in results | resultFilter:sortBy">
                       <td>
                           <result-item value="i"></result-item>
                       </td>
@@ -89,6 +89,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.0/leaflet.draw.js"></script>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script src="js/app.js"></script>
+<script src="js/filters/resultFilter.js"></script>
 <script src="js/services/resultPanelService.js"></script>
 <script src="js/services/queryService.js"></script>
 <script src="js/controllers/mapController.js"></script>

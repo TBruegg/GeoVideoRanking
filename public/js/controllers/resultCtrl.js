@@ -48,15 +48,12 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
     $scope.haveResults = function () {
         return !$scope.results || Object.keys($scope.results).length;
     };
-
+    /*
     $("#orderSelect").change(function (val) {
         $scope.orderBy = $("#orderSelect").val();
         $scope.$apply(function() {
             $scope.results = $scope.results.sort($scope.sort);
         });
     });
-
-    $scope.sort = function(a,b){
-        return -(a.rankings[$scope.orderKey] - b.rankings[$scope.orderKey]);
-    }
+    */
 });

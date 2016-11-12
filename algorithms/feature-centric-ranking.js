@@ -165,7 +165,9 @@ var httpRequest = function (options) {
     console.log("Open Connections: " + CONNECTIONS);
     var defer = q.defer();
     req = http.request(options, function (response) {
-        console.log(options.host + ':' + response.statusCode);
+        if(response.statusCode != 200) {
+            console.log(options.host + ':' + response.statusCode);
+        }
         var result = "";
         response.on("data", function (chunk) {
             result += chunk;
