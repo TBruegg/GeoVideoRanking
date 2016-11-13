@@ -3,6 +3,16 @@
  */
 
 angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope, $q, queryService, resultPanelService){
+    var createTooltip = function (el, title, pos) {
+        el.tooltip({
+            animation: true,
+            delay: {"show": 500, "hide": 100},
+            placement: pos,
+            title: title
+        });
+        el.click(function(){el.tooltip('hide')});
+    };
+
     // Initialize map
     var map = L.map('map').setView([1.2871374742069617, 103.86577606201172], 15);
     $rootScope.map = map;
@@ -26,6 +36,9 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
             position:'bottomleft'
         }).addTo(map);
     var queryJson = {};
+    createTooltip($("#selectFeatureButton"), "Click here to select a feature on the map", "right");
+    createTooltip($("#orderSelect"), "Sort results by ranking metric", "bottom");
+    createTooltip($("#queryButton"), "Search geovideos for marked building", "bottom");
 
     // Function definitions
     // ----------------------------------------------------

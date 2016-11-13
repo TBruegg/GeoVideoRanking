@@ -97,9 +97,25 @@ img {
     float: left
 }
 
+#ifgi-logo {
+    height: 45px;
+    width: auto;
+    top: 0px;
+    left: 0px
+}
+
 .navbar {
     margin-bottom: 0px;
     height: 50px;
+}
+
+.navbar-brand {
+    position: relative;
+    left: 5px;
+    top: 2px;
+    width: 120px;
+    margin-right: 10px;
+    padding: 0px;
 }
 
 .animated.ng-hide {
@@ -132,7 +148,7 @@ img {
 }
 
 .resultItem{
-    height: 150px;
+    height: auto;
     width: 100%;
     background: #FFFFFF;
     margin-bottom: 5px;
@@ -161,6 +177,11 @@ img {
 
 .resultItem table {
     text-align: left;
+}
+
+.badge {
+    background: #ff7800;
+    margin-bottom: 2px;
 }
 
 

@@ -31,7 +31,7 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
             videoList.push(video);
         }
         $scope.$apply(function() {
-            $scope.results = videoList.sort($scope.sort);
+            $scope.results = videoList;//.sort($scope.sort);
         });
         // console.log($scope.results);
         $("#loadingPage").css('display', 'none');
@@ -41,7 +41,7 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
 
     socket.on('void', function (res) {
         $scope.$apply(function() {
-            $scope.results = {};
+            $scope.results = [];
         });
         $("#loadingPage").css('display', 'none');
         $("#resultPage").css('display', 'block');

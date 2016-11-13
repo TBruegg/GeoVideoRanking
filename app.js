@@ -68,6 +68,7 @@ app.get('/api/startingPoints', function (req,res) {
 });
 
 app.get('/api/polygonQuery', function (req,res) {
+    console.log("Received query");
     var queryRegion = JSON.parse(req.query.region);
     var dbClient = new pg.Client(dbConnectionString);
     dbClient.connect();

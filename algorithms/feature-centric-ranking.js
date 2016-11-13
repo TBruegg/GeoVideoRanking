@@ -50,7 +50,7 @@ exports.calculateRankScores = function (video, query) {
                                     // console.log(i);
                                     var d = fov.properties["heading"];
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
-                                    rDist += distanceRanking.distanceRank(fov, query, borderPoints);
+                                    rDist += distanceRanking.distanceRank(fov, query, borderPoints)/n;
                                     def.resolve();
                                 }).catch(console.log.bind(console));
                             }).catch(console.log.bind(console));

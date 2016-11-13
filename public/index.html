@@ -12,6 +12,9 @@
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container navbar-left" ng-controller="navCtrl">
         <div class="navbar-header">
+            <a class="navbar-brand" target="_blank" href="https://www.uni-muenster.de/Geoinformatics/">
+                <img id="ifgi-logo" src="img/ifgi.png">
+            </a>
             <h3 class="navbar-text">GeoSearch</h3>
         </div>
         <div id = "navbar" class="collapse navbar-collapse">
@@ -28,6 +31,7 @@
     <div id="map"></div>
     <button id="selectFeatureButton" class="btn btn-default" ng-click="selectFeature()">
         <img src="img/select.png">
+        <!--<span class="glyphicon glyphicon-search" aria-hidden="true"></span>-->
     </button>
 </div>
 <div id="result-container" ng-controller="resultCtrl">
@@ -59,8 +63,7 @@
                 <table>
                   <tr ng-repeat="i in results | resultFilter:item">
                       <td>
-                          <result-item ng-mouseenter="drawPolygons(i.fovs)" ng-mouseleave="clearPolygons()"
-                                       value="i"></result-item>
+                          <result-item ng-mouseenter="drawPolygons(i.fovs)" ng-mouseleave="clearPolygons()" value="i"></result-item>
                       </td>
                   </tr>
                 </table>

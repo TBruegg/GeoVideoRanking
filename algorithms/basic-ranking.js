@@ -128,11 +128,13 @@ calculateRankScores = function(video,query){
                         rtaPoly = oPoly;
                     } else {
                         try{
+                            // TODO: Ggf. simplification wieder entfernen
+                            oPoly = helpers.simplifyFeature(oPoly, 10);
                             rtaPoly = turf.union(rtaPoly, oPoly);
                         } catch(e){
                             console.log("Error: " + e);
                             try{
-                                oPoly = helpers.simplifyFeature(oPoly, 10);
+                                oPoly = helpers.simplifyFeature(oPoly, 8);
                                 rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Resolved error by simplifying feature")
                             }catch (e){

@@ -96,6 +96,8 @@ angular.module('main').factory('queryService', function ($http, $rootScope, $q) 
                 objects = result.data.result;
                 queryCallback(objects);
                 return result;
+            }, function (err) {
+                console.log(err);
             }).catch(console.log.bind(console));
         },
         onClick: function(e){
