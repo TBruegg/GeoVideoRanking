@@ -22,7 +22,7 @@ body {
     top: 0;
     right: 0;
     height: 100%;
-    width: 400px;
+    width: 450px;
     background: dimgrey;
     color: white;
     padding: 10px;
@@ -73,7 +73,7 @@ body {
 
 #noResultsHint {
     margin-left: 35%;
-    width: 300px;
+    width: 400px;
     font-size: 15pt;
 }
 
@@ -138,7 +138,7 @@ img {
 .loadingHint {
     position: relative;
     margin: auto;
-    width: 350px;
+    width: 400px;
     text-align: center;
 }
 
@@ -149,7 +149,7 @@ img {
 
 .resultItem{
     height: auto;
-    width: 100%;
+    width: 95%;
     background: #FFFFFF;
     margin-bottom: 5px;
     /*border: 1px solid #12A3EB;*/
