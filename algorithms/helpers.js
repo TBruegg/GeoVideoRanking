@@ -68,4 +68,7 @@ exports.timestring = function (dayfrac) {
     return Math.floor(dayfrac) + ":" + Math.floor(dayfrac%1*60) + ":" + Math.floor((dayfrac%1*60)%1*60);
 };
 
-
+exports.normalizedAngle = function (angle, direction) {
+    angle = helpers.limitDegrees(angle);
+    return angle-direction;
+};

@@ -19,19 +19,19 @@ exports.distanceRank = function (fov, Q, brdrPts) {
         "properties": {}
     };
 
-    // Calculate the ditsances at which tje left-most and right-most edges of the building
+    // Calculate the distances at which tje left-most and right-most edges of the building
     // intersect with the edges of the viewable scene
     var L0 = brdrPts["ptLeft"];
     var R0 = brdrPts["ptRight"];
     var N0 = nearestPoint(Q, P);
 
-    // Calculate angles between P and the specified points and rotate them so that the repsective FOV points towards east
+    // Calculate angles between P and the specified points and rotate them so that the respective FOV points towards east
     var angleL = helpers.limitDegrees180((turf.bearing(P, L0) + (90 - d)));
     var angleR = helpers.limitDegrees180((turf.bearing(P, R0) + (90 - d)));
 
     // Calculate new positions for rotated FOV
-    var L = turf.destination(P, turf.distance(P, L0), angleL);
-    var R = turf.destination(P, turf.distance(P, R0), angleR);
+    var L = turf.destination(P, turf.distance(P, L0), 90-(angleR-angleL)/2);
+    var R = turf.destination(P, turf.distance(P, R0), 90+(angleR-angleL)/2);
 
     // Calculate Y values for border points and X value for the polygon's closest vertex towards P (in meters)
     var Lh = turf.distance({
@@ -76,7 +76,7 @@ exports.distanceRank = function (fov, Q, brdrPts) {
     // Calculate distance between nearest border point and nearest vertex
     var dist = (DL > DR) ? Lw : Rw;
     // Substract distance from calculated optimal distance
-    var distanceRank = Math.abs(dist-D0);
+    var distanceRank = D0 - Math.abs(dist-D0);
     // Distance rank score is the difference of optimal distance and actual camera-feature distance
     // var distanceRank = D - Math.abs(D - Nw);
     return distanceRank;

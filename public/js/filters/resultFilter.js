@@ -7,7 +7,7 @@ angular.module('main').filter('resultFilter', function ($filter) {
         if (items != undefined && key != undefined) {
             var sorted = items.sort(
                 function (a, b) {
-                    return -(a.rankings[key] - b.rankings[key]);
+                    return -(a.rankings[key] - b.rankings[key]) || 1;
                 });
             return sorted;
         }

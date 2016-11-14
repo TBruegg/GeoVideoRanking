@@ -4,6 +4,7 @@
 
 var illuminationRanking = require('./illumination-ranking');
 var distanceRanking = require('./distance-ranking');
+var depictionRanking = require('./depiction-ranking');
 var geo = require('./geo-algorithms');
 var helpers = require('./helpers');
 var turf = require('turf');
@@ -19,7 +20,7 @@ exports.calculateRankScores = function (video, query) {
     var fovCollection = {"type": "FeatureCollection", "features": video.fovs};
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
-    var rDist = 0, rVis = 0, rAz = 0, rEl = 0;
+    var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0;
     var rIl = illuminationRanking.illuminationRank(video);
     var azimuth = rIl["az"];
     rEl = rIl["el"];
@@ -49,8 +50,19 @@ exports.calculateRankScores = function (video, query) {
                                 borderPoints(fov, query).then(function (borderPoints) {
                                     // console.log(i);
                                     var d = fov.properties["heading"];
+                                    var depiction = depictionRanking.depictionRank(fov, video["fovs"][i+1], query, fovObjects, borderPoints);
+                                    var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
+                                    var occ = depiction;
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
                                     rDist += distanceRanking.distanceRank(fov, query, borderPoints)/n;
+                                    rDep += (occ/n)*100;
+                                    if(occ > 0){
+                                        if(i != n-1) {
+                                            rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
+                                        } else {
+                                            rVis += ((videoDuration - fov.properties.time) / videoDuration) * 100;
+                                        }
+                                    }
                                     def.resolve();
                                 }).catch(console.log.bind(console));
                             }).catch(console.log.bind(console));
@@ -67,7 +79,9 @@ exports.calculateRankScores = function (video, query) {
                 defer.resolve({
                     "REl": rEl,
                     "RAZ": rAz,
-                    "RDist": rDist
+                    "RDist": rDist,
+                    "rDep": rDep,
+                    "rVis": rVis
                 })
             }).catch(console.log.bind(console));
         }
@@ -194,6 +208,7 @@ var httpRequest = function (options) {
 };
 
 var borderPoints = function (fov, query) {
+    var angle;
     var defer = q.defer();
     var Q = query;
     var d = fov.properties["heading"];
@@ -210,7 +225,7 @@ var borderPoints = function (fov, query) {
     var angleL = 0, angleR = 0, pointL = undefined, pointR = undefined;
     for(var i=0; i<cornerPoints.length; i++){
         var vertex = cornerPoints[i];
-        var angle = normalizedAngle(turf.bearing(P, vertex),d);
+        angle = normalizedAngle(turf.bearing(P, vertex), d);
         if(i == 0){
             angleL = angle;
             angleR = angle;
