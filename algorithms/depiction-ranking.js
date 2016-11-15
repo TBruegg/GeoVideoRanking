@@ -52,7 +52,7 @@ exports.degreeOfOcclusion = function (fov, query, objects, brdrPts) {
 
 var normalizedAngularRange = function (obj, pos, d) {
     var nq = turf.explode(obj);
-    var objectAngles = []
+    var objectAngles = [];
     for(var i in nq.features){
         var vertex = nq.features[i];
         var angle = normalizedAngle(turf.bearing(pos, vertex), d);

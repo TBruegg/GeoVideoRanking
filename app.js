@@ -13,6 +13,8 @@ var q = require('q');
 var io = require('socket.io')(http);
 
 // Require algorithms
+var helpers = require('./algorithms/helpers');
+
 var illuminationRanking = require('./algorithms/illumination-ranking');
 var featureCentricRanking = require('./algorithms/feature-centric-ranking');
 
@@ -99,48 +101,49 @@ app.get('/api/polygonQuery', function (req,res) {
                 // TODO: Nur an zugehörigen Client senden
                 io.emit('loadUpdate', 'Calculating rank scores...');
                 var queryResults = geoVideoCollection;
+                loadOsmObjects(queryResults).then(function (objects) {
+                    (function () {
+                        var defer = q.defer();
+                        var counter = 0;
+                        for (var i = 0; i < Object.keys(queryResults).length; i++) {
+                            var key = Object.keys(queryResults)[i];
+                            var video = queryResults[key];
+                            //var video = queryResults["eca66ef66cb9a53dd55756a0e461ef28c03b1f7e"];
+                            video.info["geometry"] = JSON.parse(video.info["geometry"]);
 
-                (function(){
-                    var defer = q.defer();
-                    var counter = 0;
-                    for(var i=0; i < Object.keys(queryResults).length; i++){
-                        var key = Object.keys(queryResults)[i];
-                        var video = queryResults[key];
-                        //var video = queryResults["eca66ef66cb9a53dd55756a0e461ef28c03b1f7e"];
-                        video.info["geometry"] = JSON.parse(video.info["geometry"]);
-
-                        (function (i, video) {
-                            var rankScores = ranking.calculateRankScores(video, queryRegion);
-                            var featureCentricRankScores = {};
-                            featureCentricRanking.calculateRankScores(video, queryRegion).then(
-                                function (scores) {
-                                    for(var key in scores){
-                                        rankScores[key] = scores[key];
+                            (function (i, video) {
+                                var rankScores = ranking.calculateRankScores(video, queryRegion);
+                                var loadOsmObjects = {};
+                                featureCentricRanking.calculateRankScores(video, queryRegion, objects).then(
+                                    function (scores) {
+                                        for (var key in scores) {
+                                            rankScores[key] = scores[key];
+                                        }
+                                        console.log((i + 1) + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
+                                        video['rankings'] = {};
+                                        for (var j = 0; j < Object.keys(rankScores).length; j++) {
+                                            var rkey = Object.keys(rankScores)[j];
+                                            video.rankings[rkey] = Math.round(rankScores[rkey] * 100) / 100;
+                                            //video.rankings[rkey] = rankScores[rkey];
+                                        }
+                                        //console.log(JSON.stringify(video['rankings']));
+                                        //console.log("Calculated rank scores for " + Object.keys(video.info.id));
+                                        if (counter == Object.keys(queryResults).length - 1) {
+                                            defer.resolve(queryResults);
+                                        } else {
+                                            console.log("Processed video " + (i + 1) + "/" + Object.keys(queryResults).length);
+                                        }
+                                        counter++;
                                     }
-                                    console.log((i+1) + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
-                                    video['rankings'] = {};
-                                    for(var j=0; j < Object.keys(rankScores).length; j++){
-                                        var rkey = Object.keys(rankScores)[j];
-                                        video.rankings[rkey] = Math.round(rankScores[rkey]*100)/100;
-                                        //video.rankings[rkey] = rankScores[rkey];
-                                    }
-                                    //console.log(JSON.stringify(video['rankings']));
-                                    //console.log("Calculated rank scores for " + Object.keys(video.info.id));
-                                    if(counter == Object.keys(queryResults).length-1) {
-                                        defer.resolve(queryResults);
-                                    } else {
-                                        console.log("Processed video " + (i+1) + "/" + Object.keys(queryResults).length);
-                                    }
-                                    counter++;
-                                }
-                            )//.catch(console.log.bind(console));
-                        })(i, video);
-                    }
-                    return defer.promise;
-                })().then(function (queryResults) {
+                                )//.catch(console.log.bind(console));
+                            })(i, video);
+                        }
+                        return defer.promise;
+                    })().then(function (queryResults) {
                         io.emit('rankingFinished', queryResults);
                         return;
-                });//.catch(console.log.bind(console));
+                    });//.catch(console.log.bind(console));
+                });
                 // TODO: Nur an zugehörigen Client senden
                 //io.emit('rankingFinished', queryResults);
                 // testing.txt goes here
@@ -236,7 +239,21 @@ var createVideoStore = function (results) {
     return defer.promise;
 };
 
-
+var loadOsmObjects = function (queryResults) {
+    var union = undefined;
+    for(var i in queryResults){
+        var fovs = queryResults[i]["fovs"];
+        var fovCollection = {"type": "FeatureCollection", "features": fovs};
+        var M = turf.bboxPolygon(turf.bbox(fovCollection));
+        if (union != undefined){
+            union = turf.union(union,M);
+        } else {
+            union = M;
+        }
+    }
+    var bbox = turf.bbox(union);
+    return featureCentricRanking.loadObjects(bbox);
+};
 
 
 // Web Sockets

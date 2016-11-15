@@ -15,7 +15,7 @@ var q = require('q');
 var OVERPASS_URL = "overpass-api.de";
 var CONNECTIONS = 0;
 
-exports.calculateRankScores = function (video, query) {
+exports.calculateRankScores = function (video, query, objects) {
     var defer = q.defer();
     var fovCollection = {"type": "FeatureCollection", "features": video.fovs};
     var M = turf.bbox(fovCollection);
@@ -24,8 +24,8 @@ exports.calculateRankScores = function (video, query) {
     var rIl = illuminationRanking.illuminationRank(video);
     var azimuth = rIl["az"];
     rEl = rIl["el"];
-    loadObjects(M).then(function (objects) {
-            var videoObjects = objects;
+    var videoObjects = loadVideoObjects(M, objects);//.then(function (objects) {
+            //var videoObjects = objects;
             var def = q.defer();
             var promises = [];
             for(var i = 0; i < n; i++){
@@ -43,18 +43,18 @@ exports.calculateRankScores = function (video, query) {
                     if(turf.intersect(M1,query) != undefined) {
                         if(turf.intersect(fov,query) != undefined){
                             //
-                            getSceneObjects(fov, videoObjects).then(function (fovObjects) {
+                            var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
                                 // Get right/left most vertices of Q
                                 // TODO: DepictionRank hinzufügen
                                 // depictionRank().then...;
-                                borderPoints(fov, query).then(function (borderPoints) {
+                            var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
                                     // console.log(i);
                                     var d = fov.properties["heading"];
-                                    var depiction = depictionRanking.depictionRank(fov, video["fovs"][i+1], query, fovObjects, borderPoints);
+                                    var depiction = depictionRanking.depictionRank(fov, video["fovs"][i+1], query, fovObjects, borderPts);
                                     var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
                                     var occ = depiction;
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
-                                    rDist += distanceRanking.distanceRank(fov, query, borderPoints)/n;
+                                    rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
                                     rDep += (occ/n)*100;
                                     if(occ > 0){
                                         if(i != n-1) {
@@ -64,8 +64,8 @@ exports.calculateRankScores = function (video, query) {
                                         }
                                     }
                                     def.resolve();
-                                }).catch(console.log.bind(console));
-                            }).catch(console.log.bind(console));
+                                //}).catch(console.log.bind(console));
+                            //}).catch(console.log.bind(console));
                             promises.push(def.promise);
                         } else {
                             promises.push(true);
@@ -76,21 +76,22 @@ exports.calculateRankScores = function (video, query) {
                 })(i, fov);
             }
             q.all(promises).then(function () {
+                console.log("Return rankings");
                 defer.resolve({
                     "REl": rEl,
                     "RAZ": rAz,
                     "RDist": rDist,
-                    "rDep": rDep,
-                    "rVis": rVis
+                    "RDep": rDep,
+                    "RVis": rVis
                 })
             }).catch(console.log.bind(console));
-        }
-    ).catch(console.log.bind(console));
+        //}
+    //).catch(console.log.bind(console));
     return defer.promise;
 };
 
 var getSceneObjects = function (fov, videoObjects) {
-    var defer =q.defer();
+    //var defer =q.defer();
     var fovObjects = [];
     if(Object.keys(videoObjects).length > 0) {
         for (var j = 0; j < videoObjects.features.length; j++) {
@@ -99,13 +100,15 @@ var getSceneObjects = function (fov, videoObjects) {
                 fovObjects.push(currentObj);
             }
             if (j == videoObjects.features.length - 1) {
-                defer.resolve(fovObjects);
+                //defer.resolve(fovObjects);
+                return fovObjects;
             }
         }
     } else {
-        defer.resolve({});
+        //defer.resolve({});
+        return {};
     }
-    return defer.promise;
+    //return defer.promise;
 };
 
 var loadObjects = function (bBox) {
@@ -122,6 +125,22 @@ var loadObjects = function (bBox) {
         console.log("Error occured: " + e.message);
     }
     return defer.promise;
+};
+exports.loadObjects = loadObjects;
+
+var loadVideoObjects = function (bBox, objects) {
+    var geoJSON = {
+        "type": "FeatureCollection",
+        "properties" : {},
+        "features" : []
+    };
+    var features = objects.features;
+    for(var i=0; i < features.length; i++){
+        if(turf.intersect(turf.bboxPolygon(bBox),features[i]) != undefined){
+            geoJSON.features.push(features[i]);
+        }
+    }
+    return geoJSON;
 };
 
 var osmToGeoJSON = function(json){
@@ -209,7 +228,7 @@ var httpRequest = function (options) {
 
 var borderPoints = function (fov, query) {
     var angle;
-    var defer = q.defer();
+    //var defer = q.defer();
     var Q = query;
     var d = fov.properties["heading"];
     var P = {
@@ -242,10 +261,11 @@ var borderPoints = function (fov, query) {
             }
         }
         if(i == cornerPoints.length-1){
-            defer.resolve({"ptLeft": pointL, "ptRight": pointR});
+            //defer.resolve({"ptLeft": pointL, "ptRight": pointR});
+            return {"ptLeft": pointL, "ptRight": pointR};
         }
     }
-    return defer.promise;
+    //return defer.promise;
 };
 
 var normalizedAngle = function (angle, direction) {
