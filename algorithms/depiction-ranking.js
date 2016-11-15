@@ -23,17 +23,18 @@ exports.degreeOfOcclusion = function (fov, query, objects, brdrPts) {
     };
     var nq = turf.explode(query)["features"];
     var d = fov.properties["heading"];
+    var theta = fov.properties["viewable_angle"];
     var angleL = normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d) ;
     var angleR = normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d);
     var queryRanges = [[angleL, angleR]];
     var hull = turf.convex(turf.union(query, P));
     for(var i in objects){
         var obj = objects[i];
-        if(turf.intersect(obj, hull) && JSON.stringify(obj)!=JSON.stringify(query)){
+        if((turf.intersect(obj, hull) != undefined) && (JSON.stringify(obj)!=JSON.stringify(query))){
             var occlusionRange = normalizedAngularRange(obj, P, d);
             var ranges = [];
             for(var j in queryRanges){
-                var visRanges = determineVisibleRanges(queryRanges[j], occlusionRange);
+                var visRanges = determineVisibleRanges(queryRanges[j], occlusionRange, theta);
                 if(visRanges[0].length == 0){
                     return 0; // Query object is completely occluded --> sum of visible ranges i 0
                 }
@@ -67,7 +68,7 @@ var normalizedAngularRange = function (obj, pos, d) {
     return range;
 };
 
-var determineVisibleRanges = function (queryRange, occlusionRange) {
+var determineVisibleRanges = function (queryRange, occlusionRange, theta) {
     var qLeft = Math.min(queryRange[0], queryRange[1]);
     var qRight = Math.max(queryRange[0], queryRange[1]);
     var oLeft = Math.min(occlusionRange[0], occlusionRange[1]);
@@ -94,7 +95,7 @@ var determineVisibleRanges = function (queryRange, occlusionRange) {
             ranges = [[qLeft, qRight]];
         }
     }
-    return ranges;
+    return limitRanges(ranges, theta);
 };
 
 var normalizedAngle = function (angle, direction) {
@@ -103,4 +104,23 @@ var normalizedAngle = function (angle, direction) {
         angle = angle-360;
     }
     return angle;
+};
+
+var limitRanges = function(list, theta){
+    for(var i=0; i < list.length; i++){
+        var item = list[i];
+        var angle = theta/2;
+        if(item[0] instanceof Array){
+            limitRanges(item, angle);
+        } else {
+            for(var i=0; i < item.length; i++) {
+                if (item[i] < -angle) {
+                    item[i] = -angle;
+                } else if (item[i] > angle) {
+                    item[i] = angle;
+                }
+            }
+        }
+    }
+    return list;
 };

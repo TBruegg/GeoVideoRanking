@@ -119,6 +119,7 @@ app.get('/api/polygonQuery', function (req,res) {
                                         for (var key in scores) {
                                             rankScores[key] = scores[key];
                                         }
+                                        io.emit('loadUpdate', 'Calculating scores for video ' + i + '/' + Object.keys(queryResults).length);
                                         console.log((i + 1) + "/" + Object.keys(queryResults).length + ": " + JSON.stringify(rankScores));
                                         video['rankings'] = {};
                                         for (var j = 0; j < Object.keys(rankScores).length; j++) {
@@ -207,9 +208,9 @@ var createVideoStore = function (results) {
     var fovStore = {};
     it = 0;
     for (var i in results['result']) {
-        videoId = results['result'][i].id;
-        console.log(videoId);
         (function (i) {
+            var videoId = results['result'][i].id;
+            console.log(videoId);
             videoInfo(videoId).then(
                 function (info) {
                     if (!fovStore[info.id]) {

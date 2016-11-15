@@ -14,8 +14,8 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
 
     // Socket events
     socket.on('loadUpdate', function (msg) {
+        console.log(msg);
         $scope.$apply(function() {
-            console.log(msg);
             $scope.hint = msg;
         });
     });

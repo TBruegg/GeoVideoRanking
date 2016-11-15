@@ -14,6 +14,7 @@ angular.module('main').directive('resultItem', function () {
                 console.log("Show video modal");
                 $("#videoModalLabel").text("Video " + id);
                 $("#modalVideo").attr('src', src);
+                //$("#modalVideo").attr('src', "http://api.geovid.org/v1.0/gv/video/" + id + "/high");
                 $("#videoModal").modal('show');
             };
             scope.pauseVideo = function(){

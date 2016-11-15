@@ -142,13 +142,27 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
         var query = `[out:json][timeout:10];way(${lat-r},${lng-r},${lat+r},${lng+r})["building"];(._;>;);out;`;
+        var point = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [lng, lat]
+            },
+            "properties": {}
+        };
         console.log(lat + ", " + lng);
         var features = queryService.overpassRequest(overpassURL+query, queryService.osmToGeoJSON);
             features.then(function (features) {
                 if(features != undefined) {
                     console.log(features);
                     drawnItems.clearLayers();
-                    var building = features.features[0];
+                    var building;
+                    for(var i=0; i < features.features.length; i++){
+                        if(turf.intersect(point, features.features[i]) != undefined){
+                            building = features.features[i];
+                        }
+                    }
+                    //var building = features.features[0];
                     $scope.queryService.setQuery(building);
                     drawPolygon(building, drawnItems);
                 }
