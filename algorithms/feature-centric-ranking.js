@@ -53,6 +53,7 @@ exports.calculateRankScores = function (video, query, objects) {
                                     var depiction = depictionRanking.depictionRank(fov, video["fovs"][i+1], query, fovObjects, borderPts);
                                     var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
                                     var occ = depiction;
+                                    // TODO: In Thesis Dokument angleichen!!!
                                     rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
                                     rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
                                     rDep += (occ/n)*100;
