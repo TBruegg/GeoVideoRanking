@@ -141,6 +141,7 @@ app.get('/api/polygonQuery', function (req,res) {
                         }
                         return defer.promise;
                     })().then(function (queryResults) {
+                        console.log("Return results");
                         io.emit('rankingFinished', queryResults);
                         return;
                     });//.catch(console.log.bind(console));
@@ -279,6 +280,13 @@ var server = http.listen(80, function () {
 
     console.log("Example app listening at http://%s:%s", host, port);
 
+});
+
+app.use(function noCache(req, res, next){
+    res.header("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.header("Pragma", "no-cache");
+    res.header("Expires",0);
+    next();
 });
 
 

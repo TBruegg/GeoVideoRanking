@@ -76,6 +76,14 @@ exports.distanceRank = function (fov, Q, brdrPts) {
     // Calculate distance between nearest border point and nearest vertex
     var dist = (DL > DR) ? Lw : Rw;
     // Substract distance from calculated optimal distance
+    // TODO: Ausprobieren und ggf. Zeile 75 und 77 streichen!!! Anpassung in Thesis!
+    if((DL-Lw) > (DR-Rw)){
+        D0 = DL;
+        dist = Lw;
+    } else {
+        D0 = DR;
+        dist = Rw;
+    }
     var distanceRank = D0 - Math.abs(dist-D0);
     // Distance rank score is the difference of optimal distance and actual camera-feature distance
     // var distanceRank = D - Math.abs(D - Nw);

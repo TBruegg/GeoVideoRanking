@@ -76,7 +76,6 @@ exports.calculateRankScores = function (video, query, objects) {
                 })(i, fov);
             }
             q.all(promises).then(function () {
-                console.log("Return rankings");
                 defer.resolve({
                     "REl": rEl,
                     "RAZ": rAz,
@@ -267,8 +266,11 @@ var borderPoints = function (fov, query) {
     }
     //return defer.promise;
 };
-
+// TODO: normalizedAngle aus helpers verwenden
 var normalizedAngle = function (angle, direction) {
-    angle = helpers.limitDegrees(angle);
-    return angle-direction;
+    angle = helpers.limitDegrees(angle-direction);
+    if(angle > 180){
+        return angle - 360;
+    }
+    return angle;
 };

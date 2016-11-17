@@ -24,12 +24,14 @@ exports.degreeOfOcclusion = function (fov, query, objects, brdrPts) {
     var nq = turf.explode(query)["features"];
     var d = fov.properties["heading"];
     var theta = fov.properties["viewable_angle"];
-    var angleL = normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d) ;
-    var angleR = normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d);
+    // TODO: min und max In Thesis Dokument anpassen!!
+    var angleL = Math.max(normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d), -theta/2) ;
+    var angleR = Math.min(normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d), theta/2);
     var queryRanges = [[angleL, angleR]];
+    // TODO: Hull ggf entfernen (Performancekosten wahrscheinlich höher als Schleife direkt für alle Objekte laufen zu lassen)
     var hull = turf.convex(turf.union(query, P));
     for(var i in objects){
-        var obj = objects[i];
+        var obj = objects[i];// TODO: IF-Bedingung in Thesis anpassen
         if((turf.intersect(obj, hull) != undefined) && (JSON.stringify(obj)!=JSON.stringify(query))){
             var occlusionRange = normalizedAngularRange(obj, P, d);
             var ranges = [];
@@ -78,7 +80,7 @@ var determineVisibleRanges = function (queryRange, occlusionRange, theta) {
         if(qRight < oLeft){
             ranges = [[qLeft, qRight]];
         } else {
-            if(oLeft <= qRight <= oRight){
+            if((oLeft <= qRight) && (qRight <= oRight)){
                 ranges = [[qLeft, oLeft]];
             } else {
                 ranges = [[qLeft, oLeft],[oRight, qRight]]
