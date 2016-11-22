@@ -23,7 +23,7 @@ exports.distanceRank = function (fov, Q, brdrPts) {
     // intersect with the edges of the viewable scene
     var L0 = brdrPts["ptLeft"];
     var R0 = brdrPts["ptRight"];
-    var N0 = nearestPoint(Q, P);
+    // var N0 = nearestPoint(Q, P);
 
     // Calculate angles between P and the specified points and rotate them so that the respective FOV points towards east
     var angleL = helpers.limitDegrees180((turf.bearing(P, L0) + (90 - d)));
@@ -77,7 +77,7 @@ exports.distanceRank = function (fov, Q, brdrPts) {
     var dist = (DL > DR) ? Lw : Rw;
     // Substract distance from calculated optimal distance
     // TODO: Ausprobieren und ggf. Zeile 75 und 77 streichen!!! Anpassung in Thesis!
-    if((DL-Lw) > (DR-Rw)){
+    if(Math.abs(DL-Lw) > Math.abs(DR-Rw)){
         D0 = DL;
         dist = Lw;
     } else {

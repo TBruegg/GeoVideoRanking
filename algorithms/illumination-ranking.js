@@ -90,8 +90,8 @@ exports.illuminationRank = function (geovideo) {
     var parameters = equations.calcParameters(date, data["delta_t"], data["latitude"], data["longitude"], data["P"], data["T"]);
     var phi = parameters["azimuth"];
     var e = parameters["elevation"];
-    var RTS = {};
-
+    // var RTS = {};
+    /*
     var zeroHour = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
     var transitData = equations.calcParameters(zeroHour, data["delta_t"], data["latitude"], data["longitude"], data["P"], data["T"]);
     var alpha = transitData["alpha_t"];
@@ -102,18 +102,18 @@ exports.illuminationRank = function (geovideo) {
     var transit = equations.calcSolarTransit(longitude, transitData["alpha"], siderealTime);
     var sunrise = equations.calcSunrise(transit, hourAngle);
     var sunset = equations.calcSunset(transit, hourAngle);
-
-    var transit_hours = helpers.dayfracToLocalHr(transit, tz/60);
-    var sunrise_hours = helpers.dayfracToLocalHr(sunrise, tz/60);
-    var sunset_hours = helpers.dayfracToLocalHr(sunset, tz/60);
+    */
+    // var transit_hours = helpers.dayfracToLocalHr(transit, tz/60);
+    // var sunrise_hours = helpers.dayfracToLocalHr(sunrise, tz/60);
+    // var sunset_hours = helpers.dayfracToLocalHr(sunset, tz/60);
 
     //console.log("Transit: " + helpers.timestring(transit_hours));
     //console.log("Sunrise: " + helpers.timestring(sunrise_hours));
     //console.log("Sunset: " + helpers.timestring(sunset_hours));
 
-    RTS["transit"] = transit;
-    RTS["sunrise"] = sunrise;
-    RTS["sunset"] = sunset;
+    // RTS["transit"] = transit;
+    // RTS["sunrise"] = sunrise;
+    // RTS["sunset"] = sunset;
     /*
     Object.keys(parameters).forEach(function(key) {
         if(["alpha", "epsilon", "z", "h", "L", "alpha_t", "h_t"].indexOf(key) >= 0) {

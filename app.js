@@ -192,7 +192,7 @@ var videoInfo = function (id) {
     var dbClient = new pg.Client(dbConnectionString);
     dbClient.connect();
     var queryString = "SELECT id, file, os, duration, min_height, min_width, ST_asGeoJSON(initial_location) as geometry, " +
-                      "orientation, starttime, gps_accuracy, geomagnetic_declination FROM videos WHERE id = '" + id + "'";
+                      "orientation, starttime, gps_accuracy, geomagnetic_declination, number FROM videos WHERE id = '" + id + "'";
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
         videoInfo = row;

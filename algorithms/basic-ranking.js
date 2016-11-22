@@ -28,7 +28,7 @@ overlapBoundary = function(fov, query){
     var fovEdges = [helpers.asLine(fovCorners[0],fovCorners[1]), helpers.asLine(fovCorners[0],fovCorners[2])];
 
     // Check if any of the points in qVertices are within the FOVScene, if so add them to overlapPoly (6)
-    // TODO: qVertices ist eine FeeatureCollection und kein Array!!!
+    // TODO: qVertices ist eine FeatureCollection und kein Array!!!
     for(var i=0; i < qVertices.length-1; i++){
         if (helpers.pointFOVIntersect(qVertices[i],fovScene)){
             overlapPoly.push(qVertices[i]);

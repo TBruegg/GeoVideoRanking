@@ -44,27 +44,27 @@ exports.calculateRankScores = function (video, query, objects) {
                         if(turf.intersect(fov,query) != undefined){
                             //
                             var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
-                                // Get right/left most vertices of Q
-                                // TODO: DepictionRank hinzufügen
-                                // depictionRank().then...;
+                            // Get right/left most vertices of Q
+                            // TODO: DepictionRank hinzufügen
+                            // depictionRank().then...;
                             var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
-                                    // console.log(i);
-                                    var d = fov.properties["heading"];
-                                    var depiction = depictionRanking.depictionRank(fov, video["fovs"][i+1], query, fovObjects, borderPts);
-                                    var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
-                                    var occ = depiction;
-                                    // TODO: In Thesis Dokument angleichen!!!
-                                    rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
-                                    rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
-                                    rDep += (occ/n)*100;
-                                    if(occ > 0){
-                                        if(i != n-1) {
-                                            rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
-                                        } else {
-                                            rVis += ((videoDuration - fov.properties.time) / videoDuration) * 100;
-                                        }
-                                    }
-                                    def.resolve();
+                            // console.log(i);
+                            var d = fov.properties["heading"];
+                            var depiction = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
+                            var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
+                            var occ = depiction;
+                            // TODO: In Thesis Dokument angleichen!!!
+                            rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
+                            rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
+                            rDep += (occ/n)*100;
+                            if(occ > 0){
+                                if(i != n-1) {
+                                    rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
+                                } else {
+                                    rVis += ((videoDuration - fov.properties.time) / videoDuration) * 100;
+                                }
+                            }
+                            def.resolve();
                                 //}).catch(console.log.bind(console));
                             //}).catch(console.log.bind(console));
                             promises.push(def.promise);
@@ -260,6 +260,7 @@ var borderPoints = function (fov, query) {
                 pointR = vertex;
             }
         }
+        //TODO: Synchrone Funktion --> keine if Abfrage innerhalb der Schleife notwendig
         if(i == cornerPoints.length-1){
             //defer.resolve({"ptLeft": pointL, "ptRight": pointR});
             return {"ptLeft": pointL, "ptRight": pointR};

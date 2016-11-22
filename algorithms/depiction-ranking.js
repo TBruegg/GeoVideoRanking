@@ -7,12 +7,12 @@ var geo = require('./geo-algorithms');
 var turf = require('turf');
 var helpers = require('./helpers');
 
-exports.depictionRank = function (fov, fov2, query, objects, brdrPts) {
+exports.depictionRank0 = function (fov, fov2, query, objects, brdrPts) {
     var occ = exports.degreeOfOcclusion(fov, query, objects, brdrPts);
     return occ;
 };
 
-exports.degreeOfOcclusion = function (fov, query, objects, brdrPts) {
+exports.depictionRank = function (fov, query, objects, brdrPts) {
     var P = {
         "type": "Feature",
         "geometry": {
