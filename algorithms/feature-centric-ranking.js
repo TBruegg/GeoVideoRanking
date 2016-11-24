@@ -12,7 +12,7 @@ var exports = module.exports;
 var http = require('http');
 var q = require('q');
 
-var OVERPASS_URL = "overpass-api.de";
+var OVERPASS_URL = "www.overpass-api.de";
 var CONNECTIONS = 0;
 
 exports.calculateRankScores = function (video, query, objects) {
@@ -180,12 +180,26 @@ var osmToGeoJSON = function(json){
 
 var overpassRequest = function (host, query) {
     var defer = q.defer();
+    /*
     var options = {
         host: host,
         path: query,
         port: 80,
         method: 'GET'
     };
+    //*/
+    //*
+    var path = host+query;
+    var options = {
+        host: "wwwproxy.uni-muenster.de",
+        path: "http://"+path,
+        port: 80,
+        method: 'GET',
+        headers: {
+            Host: host
+        }
+    };
+    //*/
     console.log("Overpass Request");
     httpRequest(options).then(function (result) {
         defer.resolve(result);

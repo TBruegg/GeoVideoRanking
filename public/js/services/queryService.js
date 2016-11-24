@@ -9,6 +9,8 @@ angular.module('main').factory('queryService', function ($http, $rootScope, $q) 
     var featureSelectCallback;
     var cursor = $("#map").css("cursor");
     var overpassURL = "http://overpass-api.de/api/interpreter?data=";
+    var HOST = "localhost";
+    // var HOST = "giv-project15.uni-muenster.de";
     var osmToGeoJSON = function(json){
         var geoJSON = {
             "type": "FeatureCollection",
@@ -87,7 +89,7 @@ angular.module('main').factory('queryService', function ($http, $rootScope, $q) 
         },
         polygonQuery: function () {
             var coordinates = queryJson.geometry.coordinates[0];
-            var route = `http://localhost/api/polygonQuery?region=${JSON.stringify(queryJson)}`;
+            var route = `http://${HOST}/api/polygonQuery?region=${JSON.stringify(queryJson)}`;
             console.log(route);
             $("#loadingPage").css('display', 'block');
             $("#resultPage").css('display', 'none');

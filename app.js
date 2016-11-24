@@ -23,6 +23,7 @@ var ranking = require('./algorithms/basic-ranking');
 
 var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
+// var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
 var fovTableName = "fovpolygons_90";
 
 
@@ -38,6 +39,7 @@ app.get('/', function (req, res) {
 app.get('/video/:id', function (req,res) {
     var videoId = req.params.id;
     var url = "F:/Videos GeoVid/videos/" + videoId +".mp4";
+    // var url = "/home/t_brue09/videos/" + videoId +".mp4";
     var filePath = path.resolve(url);
     var stat = fs.statSync(filePath);
     var total = stat.size;
@@ -221,7 +223,8 @@ var createVideoStore = function (results) {
                         fovStore[info.id]['info'] = info;
                     }
                     fovStore[info.id]['fovs'] = {};
-                    return videoInfo(videoId);
+                    //return videoInfo(videoId);
+                    return info;
                 }
             ).then(videoFOVs(videoId).then(
                 function (fovList) {
@@ -229,11 +232,7 @@ var createVideoStore = function (results) {
                     ++it;
                     if (it == results['result'].length) {
                         defer.resolve(fovStore);
-                    } /*else {
-                        console.log("it: " + it + "/" + results['result'].length);
-                        console.log("i: " + i + "/" + results['result'].length);
-                        console.log("--------");
-                    }*/
+                    }
                 }
             )).catch(console.log.bind(console));
         })(i);
