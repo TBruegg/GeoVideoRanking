@@ -20,7 +20,7 @@ exports.calculateRankScores = function (video, query, objects) {
     var fovCollection = {"type": "FeatureCollection", "features": video.fovs};
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
-    var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0;
+    var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0, depScenes = 0;
     var rIl = illuminationRanking.illuminationRank(video);
     var azimuth = rIl["az"];
     rEl = rIl["el"];
@@ -50,14 +50,16 @@ exports.calculateRankScores = function (video, query, objects) {
                             var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
                             // console.log(i);
                             var d = fov.properties["heading"];
-                            var depiction = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
+                            var occ = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
                             var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
-                            var occ = depiction;
+                            // var occ = depiction;
                             // TODO: In Thesis Dokument angleichen!!!
                             rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
                             rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
-                            rDep += (occ/n)*100;
+                            // rDep += (occ/n)*100;
+                            rDep += occ*100;
                             if(occ > 0){
+                                depScenes += 1;
                                 if(i != n-1) {
                                     rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
                                 } else {
@@ -77,6 +79,10 @@ exports.calculateRankScores = function (video, query, objects) {
                 })(i, fov);
             }
             q.all(promises).then(function () {
+                console.log(rDep + " / " + depScenes);
+                if(rDep!=0 && depScenes != 0){
+                    rDep = rDep/depScenes;
+                }
                 defer.resolve({
                     "REl": rEl,
                     "RAZ": rAz,

@@ -80,10 +80,10 @@ app.get('/api/polygonQuery', function (req,res) {
     var queryResults = {};
     var polygonGeoJSON = wkx.Geometry.parseGeoJSON(queryRegion.geometry);
     var polygonWkt = polygonGeoJSON.toWkt();
-    var queryString = "SELECT DISTINCT v.id, ST_AsGeoJSON(v.initial_location) as geometry FROM points as p " +
+    var queryString = "SELECT DISTINCT v.id, v.duration, ST_AsGeoJSON(v.initial_location) as geometry FROM points as p " +
                 "INNER JOIN " + fovTableName + " as f ON f.camera_location = p.id " +
                 "INNER JOIN videos as v ON p.video = v.id " +
-                "WHERE ST_Overlaps(f.geometry, ST_GeomFromText('" + polygonWkt + "',4326));";
+                "WHERE ST_Overlaps(f.geometry, ST_GeomFromText('" + polygonWkt + "',4326)) ORDER BY v.duration LIMIT 20;";
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
         console.log(row);

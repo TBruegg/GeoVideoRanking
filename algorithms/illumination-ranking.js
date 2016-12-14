@@ -77,7 +77,7 @@ exports.illuminationRank = function (geovideo) {
     var z = 1830.14;
     // exports.calculate();
     var data = {
-        "delta_t": 67,
+        "delta_t": 70, //vorher 67!
         "P": 0.809277,
         "T": 11.00,
         "longitude": longitude,

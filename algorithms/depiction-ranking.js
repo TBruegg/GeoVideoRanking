@@ -25,6 +25,8 @@ exports.depictionRank = function (fov, query, objects, brdrPts) {
     var d = fov.properties["heading"];
     var theta = fov.properties["viewable_angle"];
     // TODO: min und max In Thesis Dokument anpassen!!
+    var objAngleL = normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d);
+    var objAngleR = normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d);
     var angleL = Math.max(normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d), -theta/2) ;
     var angleR = Math.min(normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d), theta/2);
     var queryRanges = [[angleL, angleR]];
@@ -46,9 +48,9 @@ exports.depictionRank = function (fov, query, objects, brdrPts) {
         }
     }
     var summedRanges = 0;
-    var maxRangeSum = Math.max(angleL, angleR) - Math.min(angleL, angleR);
+    var maxRangeSum = Math.abs(objAngleL - objAngleR);
     for(var i in queryRanges){
-        summedRanges += Math.max(queryRanges[i][0],queryRanges[i][1]) - Math.min(queryRanges[i][0],queryRanges[i][1]);
+        summedRanges += Math.abs(queryRanges[i][0] - queryRanges[i][1]);
     }
     return summedRanges/maxRangeSum
 };
