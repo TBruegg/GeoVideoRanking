@@ -110,7 +110,6 @@ app.get('/api/polygonQuery', function (req,res) {
                         for (var i = 0; i < Object.keys(queryResults).length; i++) {
                             var key = Object.keys(queryResults)[i];
                             var video = queryResults[key];
-                            //var video = queryResults["eca66ef66cb9a53dd55756a0e461ef28c03b1f7e"];
                             video.info["geometry"] = JSON.parse(video.info["geometry"]);
 
                             (function (i, video) {
