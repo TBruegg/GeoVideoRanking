@@ -12,6 +12,21 @@ var wkx = require('wkx');
 var q = require('q');
 var io = require('socket.io')(http);
 
+var executionTimes = require('./execution-times');
+timings = {
+    "tBasic": 0,
+    "rta" : 0,
+    "rsa" : 0,
+    "rd": 0,
+    "rvis": 0,
+    "rdep": 0,
+    "rdist": 0,
+    "rel": 0,
+    "raz": 0,
+    "filter": 0,
+    "overlapPoly": 0
+};
+
 // Require algorithms
 var helpers = require('./algorithms/helpers');
 
@@ -25,6 +40,8 @@ var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
 // var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
 var fovTableName = "fovpolygons_90";
+
+
 
 
 
@@ -72,6 +89,25 @@ app.get('/api/startingPoints', function (req,res) {
 });
 
 app.get('/api/polygonQuery', function (req,res) {
+    executionTimes = require('./execution-times');
+    timings = {
+        "tBasic": 0,
+        "tFeatureCentric": 0,
+        "tFeatureCentricGlobal": 0,
+        "rta" : 0,
+        "rsa" : 0,
+        "rd": 0,
+        "rvis": 0,
+        "rdep": 0,
+        "rdist": 0,
+        "rel": 0,
+        "raz": 0,
+        "filter": 0,
+        "overlapPoly": 0,
+        "filteredVideoCount": 0,
+        "featureFilter": 0,
+        "loadVideoObjects": 0
+    };
     console.log("Received query");
     var queryRegion = JSON.parse(req.query.region);
     var dbClient = new pg.Client(dbConnectionString);
@@ -84,6 +120,7 @@ app.get('/api/polygonQuery', function (req,res) {
                 "INNER JOIN " + fovTableName + " as f ON f.camera_location = p.id " +
                 "INNER JOIN videos as v ON p.video = v.id " +
                 "WHERE ST_Overlaps(f.geometry, ST_GeomFromText('" + polygonWkt + "',4326)) ORDER BY v.duration LIMIT 20;";
+    var start = process.hrtime();
     var query = dbClient.query(queryString);
     query.on('row', function (row) {
         console.log(row);
@@ -97,13 +134,22 @@ app.get('/api/polygonQuery', function (req,res) {
             return;
         }
         io.emit('loadUpdate', 'Loading FOV data...');
+        var tDB = process.hrtime(start);
+        start = process.hrtime();
         createVideoStore(results).then(
             function (geoVideoCollection) {
+                var tStore = process.hrtime(start);
+                timings["videoCount"] = Object.keys(geoVideoCollection).length;
+                timings["dbQuery"] = toSeconds(tDB);
+                timings["videoStore"] = toSeconds(tStore);
                 console.log("FOVStore created succesfully");
                 // TODO: Nur an zugehörigen Client senden
                 io.emit('loadUpdate', 'Calculating rank scores...');
                 var queryResults = geoVideoCollection;
+                start = process.hrtime();
                 loadOsmObjects(queryResults).then(function (objects) {
+                    var tLoadObjects = process.hrtime(start);
+                    timings["loadObjects"] = toSeconds(tLoadObjects);
                     (function () {
                         var defer = q.defer();
                         var counter = 0;
@@ -113,7 +159,10 @@ app.get('/api/polygonQuery', function (req,res) {
                             video.info["geometry"] = JSON.parse(video.info["geometry"]);
 
                             (function (i, video) {
+                                start = process.hrtime();
                                 var rankScores = ranking.calculateRankScores(video, queryRegion);
+                                var tBasic = process.hrtime(start);
+                                timings["tBasic"] += toSeconds(tBasic);
                                 var loadOsmObjects = {};
                                 featureCentricRanking.calculateRankScores(video, queryRegion, objects).then(
                                     function (scores) {
@@ -144,6 +193,7 @@ app.get('/api/polygonQuery', function (req,res) {
                     })().then(function (queryResults) {
                         console.log("Return results");
                         io.emit('rankingFinished', queryResults);
+                        saveTimings();
                         return;
                     });//.catch(console.log.bind(console));
                 });
@@ -253,6 +303,20 @@ var loadOsmObjects = function (queryResults) {
     }
     var bbox = turf.bbox(union);
     return featureCentricRanking.loadObjects(bbox);
+};
+
+var saveTimings = function(){
+    executionTimes.push(timings);
+    var content = JSON.stringify(executionTimes, null, '\t');
+    fs.writeFile('./execution-times.json', content, function (err) {
+        if(err) return console.error(err);
+        console.log("Saved timings to file");
+    });
+    timings = {};
+};
+
+var toSeconds = function(arr){
+    return arr[0] + arr[1]/1000000000;
 };
 
 

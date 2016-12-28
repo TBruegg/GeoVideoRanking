@@ -114,7 +114,7 @@ sceneIntersect = function(query, fov){
     // Query polygon, vertices and edges (1)
     var qPolygon = query;
     var fovScene = fov;
-    console.log(JSON.stringify(fov.properties.id));
+    // console.log(JSON.stringify(fov.properties.id));
     var qVertices = polygonVertices(qPolygon)['features'];
     var qEdges = polygonEdges(qPolygon);
     // FOV model parameters (6)

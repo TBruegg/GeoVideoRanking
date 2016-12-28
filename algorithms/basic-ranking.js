@@ -1,7 +1,6 @@
 /**
  * Created by Tobi on 23.09.2016.
  */
-
 var turf = require('turf');
 var helpers = require('./geo-algorithms');
 
@@ -96,6 +95,7 @@ overlapBoundary = function(fov, query){
 };
 
 calculateRankScores = function(video,query){
+    var basic_start = process.hrtime();
     // Parameter initializations
     var queryPolygon = query;
     var videoObject = video;
@@ -109,21 +109,36 @@ calculateRankScores = function(video,query){
     var rd = 0;
     // Calculation of Rank Scores
     // Filter step 1
+    var t_basic = process.hrtime(basic_start);
+    //console.log("t_basic: " + t_basic);
+    timings["rta"] += toSeconds(t_basic);
+    timings["rsa"] += toSeconds(t_basic);
+    timings["rd"] += toSeconds(t_basic);
+    var filter1 = process.hrtime();
     if(helpers.rectIntersect(M, queryPolygon)) {
         // TODO: Letzter Frame wird derzeit nicht betrachtet, da t(i+1) - t(i) beim letzten Frame nicht möglich ist
+        timings["filter"] += toSeconds(process.hrtime(filter1));
         for (var i = 0; i < n-1; i++) {
             var FOV = videoFOVs[i];
             var M1 = turf.bboxPolygon(turf.bbox(FOV));
             // Filter step 2
+            var filter2 = process.hrtime();
             if (helpers.rectIntersect(M1, queryPolygon)) {
                 if (helpers.sceneIntersect(queryPolygon, FOV)) {
+                    timings["filter"] += toSeconds(process.hrtime(filter2));
+                    var boundary = process.hrtime();
                     var oPoly = overlapBoundary(FOV, queryPolygon);
+                    timings["overlapPoly"] += toSeconds(process.hrtime(boundary));
                     if(oPoly == null){
                         continue;
                     };
                     // TODO: Ensure that time property is not null or undefined
+                    //console.log("t_basic2: " + t_basic2);
+                    var rd_start = process.hrtime();
                     var t1 = FOV.properties['time'];
                     var t2 = videoFOVs[i + 1].properties['time'];
+                    timings["rd"] += toSeconds(process.hrtime(rd_start));
+                    var rxa_start = process.hrtime();
                     if (rtaPoly == undefined) {
                         rtaPoly = oPoly;
                     } else {
@@ -149,15 +164,27 @@ calculateRankScores = function(video,query){
                         }
                     }
                     rsa += turf.area(oPoly) * (t2 - t1) / 1000;
+                    var t_rxa = process.hrtime(rxa_start);
+                    timings["rsa"] += toSeconds(t_rxa);
+                    timings["rta"] += toSeconds(t_rxa);
+                    var rd_start2 = process.hrtime();
                     rd += (t2 - t1) / 1000;
+                    timings["rd"] += toSeconds(process.hrtime(rd_start2));
                 }
             }
         }
+        var rta_start = process.hrtime();
         rta = (rtaPoly!=undefined)? turf.area(turf.convex(rtaPoly)) : 0;
+        timings["rta"] += toSeconds(process.hrtime(rta_start));
     }
-    console.log("Return scores for " + video.info.id);
+    if(rd > 0) timings["filteredVideoCount"] += 1;
+    console.log("Return scores for " + video.info.id + " in " + toSeconds(process.hrtime(basic_start)) + " seconds");
     console.log(JSON.stringify({"RTA": rta, "RSA": rsa, "RD": rd}));
     return {"RTA": rta, "RSA": rsa, "RD": rd};
+};
+
+var toSeconds = function(arr){
+    return arr[0] + arr[1]/1000000000;
 };
 
 module.exports = {
