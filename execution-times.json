@@ -1,1 +1,30 @@
-[]
+[
+	{
+		"tBasic": 5.364581069,
+		"tFeatureCentric": 237.702100433,
+		"bBaseTime": 0.004740796999999999,
+		"fBaseTime": 0.0020111839999999996,
+		"tFeatureCentricGlobal": 0,
+		"rta": 0.7078659119999992,
+		"rsa": 0.08529614700000002,
+		"rd": 0.000972534000000006,
+		"rvis": 32.175365946999875,
+		"rdep": 32.18623879999996,
+		"rdist": 0.02909339900000002,
+		"rel": 0.011681207999999998,
+		"raz": 0.012654983999999968,
+		"filter": 0.34751535099999986,
+		"overlapPoly": 2.8332473879999993,
+		"filteredVideoCount": 5,
+		"featureFilter": 0.28083631399999975,
+		"loadVideoObjects": 2.6511762900000004,
+		"fovs_basic": 2381,
+		"fovs_extended": 2381,
+		"fovs_processed_basic": 310,
+		"fovs_processed_extended": 328,
+		"videoCount": 8,
+		"dbQuery": 0.166164315,
+		"videoStore": 0.696256956,
+		"loadObjects": 1.428228754
+	}
+]

@@ -22,6 +22,9 @@ exports.calculateRankScores = function (video, query, objects) {
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
     var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0, depScenes = 0;
+    var def = q.defer();
+    var promises = [];
+    var t_feature_centric = toSeconds(process.hrtime(tFeatureCentric));
     var start_ill = process.hrtime();
     var rIl = illuminationRanking.illuminationRank(video);
     var azimuth = rIl["az"];
@@ -29,28 +32,21 @@ exports.calculateRankScores = function (video, query, objects) {
     var t_ill = process.hrtime(start_ill);
     timings["rel"] += toSeconds(t_ill);
     timings["raz"] += toSeconds(t_ill);
+    timings["fovs_extended"] += n;
+    timings["fBaseTime"] += t_feature_centric;
     var tLoadObjects = process.hrtime();
     var videoObjects = loadVideoObjects(M, objects);//.then(function (objects) {
     timings["loadVideoObjects"] += toSeconds(process.hrtime(tLoadObjects));
             //var videoObjects = objects;
-    var def = q.defer();
-    var promises = [];
     for(var i = 0; i < n; i++){
-        var fov = video["fovs"][i];
-        var P = {
-            "type":"Feature",
-            "properties": {},
-            "geometry": {
-                "type": "Point",
-                "coordinates": [fov.properties["latitude"], fov.properties["latitude"]]
-            }
-        };
         var featureFilter = process.hrtime();
+        var fov = video["fovs"][i];
         var M1 = turf.bboxPolygon(turf.bbox(fov));
         (function (i, fov) {
             if(turf.intersect(M1,query) != undefined) {
                 if(turf.intersect(fov,query) != undefined){
                     timings["featureFilter"] += toSeconds(process.hrtime(featureFilter));
+                    timings["fovs_processed_extended"] += 1;
                     var start_getSceneObjects = process.hrtime();
                     var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
                     var tGetSceneObjects = process.hrtime(start_getSceneObjects)
@@ -68,7 +64,9 @@ exports.calculateRankScores = function (video, query, objects) {
                     var start_dep = process.hrtime();
                     var occ = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
                     rDep += occ*100;
-                    timings["rdep"] += toSeconds(process.hrtime(start_dep));
+                    var tDep = process.hrtime(start_dep);
+                    timings["rdep"] += toSeconds(tDep);
+                    timings["rvis"] += toSeconds(tDep);
                     var start_dur = process.hrtime();
                     var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
                     timings["rvis"] += toSeconds(process.hrtime(start_dur));
@@ -111,7 +109,6 @@ exports.calculateRankScores = function (video, query, objects) {
             rDep = rDep/depScenes;
         }
         timings["rdep"] += toSeconds(process.hrtime(start_dep));
-        timings["tFeatureCentric"] += toSeconds(process.hrtime(tFeatureCentric));
         defer.resolve({
             "REl": rEl,
             "RAZ": rAz,

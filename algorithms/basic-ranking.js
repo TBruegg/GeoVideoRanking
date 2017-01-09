@@ -111,21 +111,21 @@ calculateRankScores = function(video,query){
     // Filter step 1
     var t_basic = process.hrtime(basic_start);
     //console.log("t_basic: " + t_basic);
-    timings["rta"] += toSeconds(t_basic);
-    timings["rsa"] += toSeconds(t_basic);
-    timings["rd"] += toSeconds(t_basic);
+    timings["bBaseTime"] += toSeconds(t_basic);
+    timings["fovs_basic"] += n;
     var filter1 = process.hrtime();
     if(helpers.rectIntersect(M, queryPolygon)) {
         // TODO: Letzter Frame wird derzeit nicht betrachtet, da t(i+1) - t(i) beim letzten Frame nicht möglich ist
         timings["filter"] += toSeconds(process.hrtime(filter1));
         for (var i = 0; i < n-1; i++) {
+            var filter2 = process.hrtime();
             var FOV = videoFOVs[i];
             var M1 = turf.bboxPolygon(turf.bbox(FOV));
             // Filter step 2
-            var filter2 = process.hrtime();
             if (helpers.rectIntersect(M1, queryPolygon)) {
                 if (helpers.sceneIntersect(queryPolygon, FOV)) {
                     timings["filter"] += toSeconds(process.hrtime(filter2));
+                    timings["fovs_processed_basic"] += 1;
                     var boundary = process.hrtime();
                     var oPoly = overlapBoundary(FOV, queryPolygon);
                     timings["overlapPoly"] += toSeconds(process.hrtime(boundary));
@@ -139,18 +139,28 @@ calculateRankScores = function(video,query){
                     var t2 = videoFOVs[i + 1].properties['time'];
                     timings["rd"] += toSeconds(process.hrtime(rd_start));
                     var rxa_start = process.hrtime();
+                    var t_rxa = 0;
+                    var t_rta = 0;
+                    var start_rta;
                     if (rtaPoly == undefined) {
                         rtaPoly = oPoly;
+                        t_rta = toSeconds(process.hrtime(rxa_start));
                     } else {
                         try{
                             // TODO: Ggf. simplification wieder entfernen
                             oPoly = helpers.simplifyFeature(oPoly, 10);
+                            t_rxa = toSeconds(process.hrtime(rxa_start));
+                            start_rta = process.hrtime();
                             rtaPoly = turf.union(rtaPoly, oPoly);
+                            t_rta = toSeconds(process.hrtime(start_rta));
                         } catch(e){
                             console.log("Error: " + e);
                             try{
                                 oPoly = helpers.simplifyFeature(oPoly, 8);
+                                t_rxa = toSeconds(process.hrtime(rxa_start));
+                                start_rta = process.hrtime();
                                 rtaPoly = turf.union(rtaPoly, oPoly);
+                                t_rta = toSeconds(process.hrtime(start_rta));
                                 console.log("Resolved error by simplifying feature")
                             }catch (e){
                                 //var pointsRta = turf.explode(rtaPoly);
@@ -164,9 +174,9 @@ calculateRankScores = function(video,query){
                         }
                     }
                     rsa += turf.area(oPoly) * (t2 - t1) / 1000;
-                    var t_rxa = process.hrtime(rxa_start);
-                    timings["rsa"] += toSeconds(t_rxa);
-                    timings["rta"] += toSeconds(t_rxa);
+                    timings["rsa"] += t_rxa;
+                    timings["rta"] += t_rxa;
+                    timings["rta"] += t_rta;
                     var rd_start2 = process.hrtime();
                     rd += (t2 - t1) / 1000;
                     timings["rd"] += toSeconds(process.hrtime(rd_start2));

@@ -15,6 +15,10 @@ var io = require('socket.io')(http);
 var executionTimes = require('./execution-times');
 timings = {
     "tBasic": 0,
+    "tFeatureCentric": 0,
+    "bBaseTime": 0,
+    "fBaseTime": 0,
+    "tFeatureCentricGlobal": 0,
     "rta" : 0,
     "rsa" : 0,
     "rd": 0,
@@ -24,9 +28,15 @@ timings = {
     "rel": 0,
     "raz": 0,
     "filter": 0,
-    "overlapPoly": 0
+    "overlapPoly": 0,
+    "filteredVideoCount": 0,
+    "featureFilter": 0,
+    "loadVideoObjects": 0,
+    "fovs_basic": 0,
+    "fovs_extended": 0,
+    "fovs_processed_basic": 0,
+    "fovs_processed_extended": 0
 };
-
 // Require algorithms
 var helpers = require('./algorithms/helpers');
 
@@ -93,6 +103,8 @@ app.get('/api/polygonQuery', function (req,res) {
     timings = {
         "tBasic": 0,
         "tFeatureCentric": 0,
+        "bBaseTime": 0,
+        "fBaseTime": 0,
         "tFeatureCentricGlobal": 0,
         "rta" : 0,
         "rsa" : 0,
@@ -106,7 +118,11 @@ app.get('/api/polygonQuery', function (req,res) {
         "overlapPoly": 0,
         "filteredVideoCount": 0,
         "featureFilter": 0,
-        "loadVideoObjects": 0
+        "loadVideoObjects": 0,
+        "fovs_basic": 0,
+        "fovs_extended": 0,
+        "fovs_processed_basic": 0,
+        "fovs_processed_extended": 0
     };
     console.log("Received query");
     var queryRegion = JSON.parse(req.query.region);
@@ -159,13 +175,14 @@ app.get('/api/polygonQuery', function (req,res) {
                             video.info["geometry"] = JSON.parse(video.info["geometry"]);
 
                             (function (i, video) {
-                                start = process.hrtime();
+                                var start_b = process.hrtime();
                                 var rankScores = ranking.calculateRankScores(video, queryRegion);
-                                var tBasic = process.hrtime(start);
-                                timings["tBasic"] += toSeconds(tBasic);
+                                timings["tBasic"] += toSeconds(process.hrtime(start_b));
                                 var loadOsmObjects = {};
+                                var start_f = process.hrtime();
                                 featureCentricRanking.calculateRankScores(video, queryRegion, objects).then(
                                     function (scores) {
+                                        timings["tFeatureCentric"] += toSeconds(process.hrtime(start_f));
                                         for (var key in scores) {
                                             rankScores[key] = scores[key];
                                         }
@@ -312,7 +329,30 @@ var saveTimings = function(){
         if(err) return console.error(err);
         console.log("Saved timings to file");
     });
-    timings = {};
+    timings = {
+        "tBasic": 0,
+        "tFeatureCentric": 0,
+        "bBaseTime": 0,
+        "fBaseTime": 0,
+        "tFeatureCentricGlobal": 0,
+        "rta" : 0,
+        "rsa" : 0,
+        "rd": 0,
+        "rvis": 0,
+        "rdep": 0,
+        "rdist": 0,
+        "rel": 0,
+        "raz": 0,
+        "filter": 0,
+        "overlapPoly": 0,
+        "filteredVideoCount": 0,
+        "featureFilter": 0,
+        "loadVideoObjects": 0,
+        "fovs_basic": 0,
+        "fovs_extended": 0,
+        "fovs_processed_basic": 0,
+        "fovs_processed_extended": 0
+    };
 };
 
 var toSeconds = function(arr){
