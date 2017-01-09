@@ -21,7 +21,7 @@ exports.calculateRankScores = function (video, query, objects) {
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
     var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0, depScenes = 0;
-    var rIl = illuminationRanking.illuminationRank(video);
+    var rIl = illuminationRanking.solarAngles(video);
     var azimuth = rIl["az"];
     rEl = rIl["el"];
     var videoObjects = loadVideoObjects(M, objects);//.then(function (objects) {
@@ -46,16 +46,16 @@ exports.calculateRankScores = function (video, query, objects) {
                             var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
                             // Get right/left most vertices of Q
                             // TODO: DepictionRank hinzufügen
-                            // depictionRank().then...;
+                            // objectDepiction().then...;
                             var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
                             // console.log(i);
                             var d = fov.properties["heading"];
-                            var occ = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
+                            var occ = depictionRanking.objectDepiction(fov, query, fovObjects, borderPts);
                             var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
                             // var occ = depiction;
                             // TODO: In Thesis Dokument angleichen!!!
                             rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
-                            rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
+                            rDist += distanceRanking.distanceDeviation(fov, query, borderPts)/n;
                             // rDep += (occ/n)*100;
                             rDep += occ*100;
                             if(occ > 0){
