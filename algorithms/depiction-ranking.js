@@ -12,7 +12,7 @@ exports.depictionRank0 = function (fov, fov2, query, objects, brdrPts) {
     return occ;
 };
 
-exports.depictionRank = function (fov, query, objects, brdrPts) {
+exports.objectDepiction = function (fov, query, objects, brdrPts) {
     var P = {
         "type": "Feature",
         "geometry": {

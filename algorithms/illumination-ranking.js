@@ -65,7 +65,7 @@ exports.calculate = function(date, lat, lng, z, tz) {
     return result;
 };
 
-exports.illuminationRank = function (geovideo) {
+exports.solarAngles = function (geovideo) {
     var fovCollection = {"type": "FeatureCollection", "features": geovideo.fovs};
     var time = parseInt(geovideo.info["starttime"]) + parseInt(geovideo.info["duration"])/2;
     var date = new Date(time);
@@ -171,4 +171,4 @@ var TZ = -7;
         "geomagnetic_declination": 0.066666666666667
     }
 };*/
-// exports.illuminationRank(video);
+// exports.solarAngles(video);

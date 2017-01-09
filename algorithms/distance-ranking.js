@@ -7,7 +7,7 @@ var geo = require('./geo-algorithms');
 var turf = require('turf');
 var helpers = require('./helpers');
 
-exports.distanceRank = function (fov, Q, brdrPts) {
+exports.distanceDeviation = function (fov, Q, brdrPts) {
     var d = fov.properties["heading"];
     var theta = fov.properties["viewable_angle"];
     var P = {
@@ -86,7 +86,7 @@ exports.distanceRank = function (fov, Q, brdrPts) {
     }
     var distanceRank = D0 - Math.abs(dist-D0);
     // Distance rank score is the difference of optimal distance and actual camera-feature distance
-    // var distanceRank = D - Math.abs(D - Nw);
+    // var distanceDeviation = D - Math.abs(D - Nw);
     return distanceRank;
 };
 

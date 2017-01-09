@@ -16,107 +16,81 @@ var OVERPASS_URL = "www.overpass-api.de";
 var CONNECTIONS = 0;
 
 exports.calculateRankScores = function (video, query, objects) {
-    var tFeatureCentric = process.hrtime();
     var defer = q.defer();
     var fovCollection = {"type": "FeatureCollection", "features": video.fovs};
     var M = turf.bbox(fovCollection);
     var n = video["fovs"].length;
     var rDist = 0, rVis = 0, rAz = 0, rEl = 0, rDep = 0, depScenes = 0;
-    var def = q.defer();
-    var promises = [];
-    var t_feature_centric = toSeconds(process.hrtime(tFeatureCentric));
-    var start_ill = process.hrtime();
-    var rIl = illuminationRanking.illuminationRank(video);
+    var rIl = illuminationRanking.solarAngles(video);
     var azimuth = rIl["az"];
     rEl = rIl["el"];
-    var t_ill = process.hrtime(start_ill);
-    timings["rel"] += toSeconds(t_ill);
-    timings["raz"] += toSeconds(t_ill);
-    timings["fovs_extended"] += n;
-    timings["fBaseTime"] += t_feature_centric;
-    var tLoadObjects = process.hrtime();
     var videoObjects = loadVideoObjects(M, objects);//.then(function (objects) {
-    timings["loadVideoObjects"] += toSeconds(process.hrtime(tLoadObjects));
             //var videoObjects = objects;
-    for(var i = 0; i < n; i++){
-        var featureFilter = process.hrtime();
-        var fov = video["fovs"][i];
-        var M1 = turf.bboxPolygon(turf.bbox(fov));
-        (function (i, fov) {
-            if(turf.intersect(M1,query) != undefined) {
-                if(turf.intersect(fov,query) != undefined){
-                    timings["featureFilter"] += toSeconds(process.hrtime(featureFilter));
-                    timings["fovs_processed_extended"] += 1;
-                    var start_getSceneObjects = process.hrtime();
-                    var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
-                    var tGetSceneObjects = process.hrtime(start_getSceneObjects)
-                    timings["rdep"] += toSeconds(tGetSceneObjects);
-                    timings["rvis"] += toSeconds(tGetSceneObjects);
-                    // Get right/left most vertices of Q
-                    // TODO: DepictionRank hinzufügen
-                    // depictionRank().then...;
-                    var start_borderPts = process.hrtime();
-                    var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
-                    var tBorderPts = process.hrtime(start_borderPts);
-                    timings["rdep"] += toSeconds(tBorderPts);
-                    timings["rdist"] += toSeconds(tBorderPts);
-                    // console.log(i);
-                    var start_dep = process.hrtime();
-                    var occ = depictionRanking.depictionRank(fov, query, fovObjects, borderPts);
-                    rDep += occ*100;
-                    var tDep = process.hrtime(start_dep);
-                    timings["rdep"] += toSeconds(tDep);
-                    timings["rvis"] += toSeconds(tDep);
-                    var start_dur = process.hrtime();
-                    var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
-                    timings["rvis"] += toSeconds(process.hrtime(start_dur));
-                    // var occ = depiction;
-                    // TODO: In Thesis Dokument angleichen!!!
-                    var start_az = process.hrtime();
-                    var d = fov.properties["heading"];
-                    rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
-                    timings["raz"] += toSeconds(process.hrtime(start_az));
-                    var start_dist = process.hrtime();
-                    rDist += distanceRanking.distanceRank(fov, query, borderPts)/n;
-                    timings["rdist"] += toSeconds(process.hrtime(start_dist));
-                    // rDep += (occ/n)*100;
-                    var start_vis = process.hrtime();
-                    if(occ > 0){
-                        depScenes += 1;
-                        if(i != n-1) {
-                            rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
-                        } else {
-                            rVis += ((videoDuration - fov.properties.time) / videoDuration) * 100;
-                        }
+            var def = q.defer();
+            var promises = [];
+            for(var i = 0; i < n; i++){
+                var fov = video["fovs"][i];
+                var P = {
+                    "type":"Feature",
+                    "properties": {},
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [fov.properties["latitude"], fov.properties["latitude"]]
                     }
-                    timings["rvis"] += toSeconds(process.hrtime(start_vis));
-                    def.resolve();
-                        //}).catch(console.log.bind(console));
-                    //}).catch(console.log.bind(console));
-                    promises.push(def.promise);
-                } else {
-                    promises.push(true);
-                }
-            } else {
-                promises.push(true);
+                };
+                var M1 = turf.bboxPolygon(turf.bbox(fov));
+                (function (i, fov) {
+                    if(turf.intersect(M1,query) != undefined) {
+                        if(turf.intersect(fov,query) != undefined){
+                            //
+                            var fovObjects = getSceneObjects(fov, videoObjects);//.then(function (fovObjects) {
+                            // Get right/left most vertices of Q
+                            // TODO: DepictionRank hinzufügen
+                            // objectDepiction().then...;
+                            var borderPts = borderPoints(fov, query);//.then(function (borderPoints) {
+                            // console.log(i);
+                            var d = fov.properties["heading"];
+                            var occ = depictionRanking.objectDepiction(fov, query, fovObjects, borderPts);
+                            var videoDuration = video.info.duration -  video.fovs[0]["properties"]["time"];
+                            // var occ = depiction;
+                            // TODO: In Thesis Dokument angleichen!!!
+                            rAz += Math.min(Math.abs(d - azimuth), 360 - Math.abs(d - azimuth))/n;
+                            rDist += distanceRanking.distanceDeviation(fov, query, borderPts)/n;
+                            // rDep += (occ/n)*100;
+                            rDep += occ*100;
+                            if(occ > 0){
+                                depScenes += 1;
+                                if(i != n-1) {
+                                    rVis += ((video["fovs"][i + 1].properties.time - fov.properties.time) / videoDuration) * 100;
+                                } else {
+                                    rVis += ((videoDuration - fov.properties.time) / videoDuration) * 100;
+                                }
+                            }
+                            def.resolve();
+                                //}).catch(console.log.bind(console));
+                            //}).catch(console.log.bind(console));
+                            promises.push(def.promise);
+                        } else {
+                            promises.push(true);
+                        }
+                    } else {
+                        promises.push(true);
+                    }
+                })(i, fov);
             }
-        })(i, fov);
-    }
-    q.all(promises).then(function () {
-        console.log(rDep + " / " + depScenes);
-        var start_dep = process.hrtime();
-        if(rDep!=0 && depScenes != 0){
-            rDep = rDep/depScenes;
-        }
-        timings["rdep"] += toSeconds(process.hrtime(start_dep));
-        defer.resolve({
-            "REl": rEl,
-            "RAZ": rAz,
-            "RDist": rDist,
-            "RDep": rDep,
-            "RVis": rVis
-        })
-    }).catch(console.log.bind(console));
+            q.all(promises).then(function () {
+                console.log(rDep + " / " + depScenes);
+                if(rDep!=0 && depScenes != 0){
+                    rDep = rDep/depScenes;
+                }
+                defer.resolve({
+                    "REl": rEl,
+                    "RAZ": rAz,
+                    "RDist": rDist,
+                    "RDep": rDep,
+                    "RVis": rVis
+                })
+            }).catch(console.log.bind(console));
         //}
     //).catch(console.log.bind(console));
     return defer.promise;
@@ -321,8 +295,4 @@ var normalizedAngle = function (angle, direction) {
         return angle - 360;
     }
     return angle;
-};
-
-var toSeconds = function(arr){
-    return arr[0] + arr[1]/1000000000;
 };
