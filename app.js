@@ -12,6 +12,8 @@ var wkx = require('wkx');
 var q = require('q');
 var io = require('socket.io')(http);
 
+var executionTimes = require('./execution-times');
+
 // Require algorithms
 var helpers = require('./algorithms/helpers');
 
@@ -25,6 +27,8 @@ var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
 // var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
 var fovTableName = "fovpolygons_90";
+
+
 
 
 
@@ -72,6 +76,7 @@ app.get('/api/startingPoints', function (req,res) {
 });
 
 app.get('/api/polygonQuery', function (req,res) {
+    executionTimes = require('./execution-times');
     console.log("Received query");
     var queryRegion = JSON.parse(req.query.region);
     var dbClient = new pg.Client(dbConnectionString);

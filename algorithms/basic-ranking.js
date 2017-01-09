@@ -1,7 +1,6 @@
 /**
  * Created by Tobi on 23.09.2016.
  */
-
 var turf = require('turf');
 var helpers = require('./geo-algorithms');
 
@@ -96,6 +95,7 @@ overlapBoundary = function(fov, query){
 };
 
 calculateRankScores = function(video,query){
+    var basic_start = process.hrtime();
     // Parameter initializations
     var queryPolygon = query;
     var videoObject = video;
