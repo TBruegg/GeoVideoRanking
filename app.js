@@ -6,7 +6,6 @@ var app = express();
 var http = require('http').Server(app);
 var fs = require('fs');
 var path = require('path');
-var bodyParser = require('body-parser');
 var turf = require('turf');
 var wkx = require('wkx');
 var q = require('q');
@@ -17,7 +16,6 @@ var executionTimes = require('./execution-times');
 // Require algorithms
 var helpers = require('./algorithms/helpers');
 
-var illuminationRanking = require('./algorithms/illumination-ranking');
 var featureCentricRanking = require('./algorithms/feature-centric-ranking');
 
 var algorithms = require('./algorithms/geo-algorithms');
@@ -26,6 +24,7 @@ var ranking = require('./algorithms/basic-ranking');
 var pg = require('pg');
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
 // var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
+// var dbConnectionString = "postgres://postgres:postgres@giv-project15.uni-muenster.de:5432/geovideo";
 var fovTableName = "fovpolygons_90";
 
 
@@ -42,9 +41,9 @@ app.get('/', function (req, res) {
 
 app.get('/video/:id', function (req,res) {
     var videoId = req.params.id;
-    var url = "F:/Videos GeoVid/videos/" + videoId +".mp4";
-    // var url = "/home/t_brue09/videos/" + videoId +".mp4";
-    var filePath = path.resolve(url);
+    var VIDEO_DIRECTORY = "F:/Videos GeoVid/videos/" + videoId +".mp4";
+    // var VIDEO_DIRECTORY = "/home/t_brue09/videos/" + videoId +".mp4";
+    var filePath = path.resolve(VIDEO_DIRECTORY);
     var stat = fs.statSync(filePath);
     var total = stat.size;
     if (req.headers['range']) {
@@ -52,12 +51,9 @@ app.get('/video/:id', function (req,res) {
         var parts = range.replace(/bytes=/, "").split("-");
         var partialstart = parts[0];
         var partialend = parts[1];
-
         var start = parseInt(partialstart, 10);
         var end = partialend ? parseInt(partialend, 10) : total-1;
         var chunksize = (end-start)+1;
-        // console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
-
         var file = fs.createReadStream(filePath, {start: start, end: end});
         res.writeHead(206, { 'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
                              'Accept-Ranges': 'bytes',
@@ -75,6 +71,7 @@ app.get('/api/startingPoints', function (req,res) {
    res.send('ROUTE startingPoints');
 });
 
+// Compute ranking algorithms for video's intersecting with the given query region
 app.get('/api/polygonQuery', function (req,res) {
     executionTimes = require('./execution-times');
     console.log("Received query");
@@ -82,7 +79,6 @@ app.get('/api/polygonQuery', function (req,res) {
     var dbClient = new pg.Client(dbConnectionString);
     dbClient.connect();
     var results = {"result":[]};
-    var queryResults = {};
     var polygonGeoJSON = wkx.Geometry.parseGeoJSON(queryRegion.geometry);
     var polygonWkt = polygonGeoJSON.toWkt();
     var queryString = "SELECT DISTINCT v.id, v.duration, ST_AsGeoJSON(v.initial_location) as geometry FROM points as p " +
@@ -102,24 +98,27 @@ app.get('/api/polygonQuery', function (req,res) {
             return;
         }
         io.emit('loadUpdate', 'Loading FOV data...');
+        // Cache video data
         createVideoStore(results).then(
             function (geoVideoCollection) {
                 console.log("FOVStore created succesfully");
-                // TODO: Nur an zugehörigen Client senden
                 io.emit('loadUpdate', 'Calculating rank scores...');
                 var queryResults = geoVideoCollection;
+                // Download objects for all videos and cache them for later processing
                 loadOsmObjects(queryResults).then(function (objects) {
                     (function () {
                         var defer = q.defer();
                         var counter = 0;
+                        // Compute ranking scores for each video return for the given query
                         for (var i = 0; i < Object.keys(queryResults).length; i++) {
                             var key = Object.keys(queryResults)[i];
                             var video = queryResults[key];
                             video.info["geometry"] = JSON.parse(video.info["geometry"]);
 
                             (function (i, video) {
+                                // Calculate original ranking metrics
                                 var rankScores = ranking.calculateRankScores(video, queryRegion);
-                                var loadOsmObjects = {};
+                                // Calculate feature-centric ranking metrics
                                 featureCentricRanking.calculateRankScores(video, queryRegion, objects).then(
                                     function (scores) {
                                         for (var key in scores) {
@@ -131,10 +130,7 @@ app.get('/api/polygonQuery', function (req,res) {
                                         for (var j = 0; j < Object.keys(rankScores).length; j++) {
                                             var rkey = Object.keys(rankScores)[j];
                                             video.rankings[rkey] = Math.round(rankScores[rkey] * 100) / 100;
-                                            //video.rankings[rkey] = rankScores[rkey];
                                         }
-                                        //console.log(JSON.stringify(video['rankings']));
-                                        //console.log("Calculated rank scores for " + Object.keys(video.info.id));
                                         if (counter == Object.keys(queryResults).length - 1) {
                                             defer.resolve(queryResults);
                                         } else {
@@ -142,7 +138,7 @@ app.get('/api/polygonQuery', function (req,res) {
                                         }
                                         counter++;
                                     }
-                                )//.catch(console.log.bind(console));
+                                )
                             })(i, video);
                         }
                         return defer.promise;
@@ -150,20 +146,17 @@ app.get('/api/polygonQuery', function (req,res) {
                         console.log("Return results");
                         io.emit('rankingFinished', queryResults);
                         return;
-                    });//.catch(console.log.bind(console));
+                    });
                 });
-                // TODO: Nur an zugehörigen Client senden
-                //io.emit('rankingFinished', queryResults);
-                // testing.txt goes here
             }
         ).catch(console.log.bind(console));
     });
-    //res.json(results);
 });
 
 // Helper functions
 // ----------------------------------------------------------------
 
+// Load FOVScene descriptions for specified video
 var videoFOVs = function (id) {
     var defer = q.defer();
     var fovList = {"id":id,"fovs":[]};
@@ -192,6 +185,7 @@ var videoFOVs = function (id) {
     return defer.promise;
 };
 
+// Load general video metadata
 var videoInfo = function (id) {
     var videoInfo;
     var defer = q.defer();
@@ -210,6 +204,7 @@ var videoInfo = function (id) {
     return defer.promise;
 };
 
+// Cache georeferenced videos for ranking algorithm
 var createVideoStore = function (results) {
     var defer = q.defer();
     var fovStore = {};
@@ -227,7 +222,6 @@ var createVideoStore = function (results) {
                         fovStore[info.id]['info'] = info;
                     }
                     fovStore[info.id]['fovs'] = {};
-                    //return videoInfo(videoId);
                     return info;
                 }
             ).then(videoFOVs(videoId).then(

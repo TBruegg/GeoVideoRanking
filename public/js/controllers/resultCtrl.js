@@ -33,10 +33,8 @@ angular.module('main').controller('resultCtrl', function($scope, $sce, resultPan
         $scope.$apply(function() {
             $scope.results = videoList;//.sort($scope.sort);
         });
-        // console.log($scope.results);
         $("#loadingPage").css('display', 'none');
         $("#resultPage").css('display', 'block');
-        // console.log("resultsPage:display -> " + $("#resultPage").css('display'));
     });
 
     socket.on('void', function (res) {

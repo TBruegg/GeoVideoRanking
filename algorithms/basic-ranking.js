@@ -83,9 +83,6 @@ overlapBoundary = function(fov, query){
         }
     }
 
-    // Old approach goes here
-    // --> <--
-
     if(overlapPoly.length >= 3) {
         overlapPoly = {"type": "FeatureCollection", "features": overlapPoly};
         overlapPoly = turf.convex(overlapPoly);
@@ -95,10 +92,8 @@ overlapBoundary = function(fov, query){
 };
 
 calculateRankScores = function(video,query){
-    var basic_start = process.hrtime();
     // Parameter initializations
     var queryPolygon = query;
-    var videoObject = video;
     var videoFOVs = video['fovs'];
     var fovCollection = {"type":"FeatureCollection","features":videoFOVs};
     var n = videoFOVs.length;
@@ -110,25 +105,23 @@ calculateRankScores = function(video,query){
     // Calculation of Rank Scores
     // Filter step 1
     if(helpers.rectIntersect(M, queryPolygon)) {
-        // TODO: Letzter Frame wird derzeit nicht betrachtet, da t(i+1) - t(i) beim letzten Frame nicht möglich ist
         for (var i = 0; i < n-1; i++) {
             var FOV = videoFOVs[i];
             var M1 = turf.bboxPolygon(turf.bbox(FOV));
             // Filter step 2
             if (helpers.rectIntersect(M1, queryPolygon)) {
+                // Filter step 3
                 if (helpers.sceneIntersect(queryPolygon, FOV)) {
                     var oPoly = overlapBoundary(FOV, queryPolygon);
                     if(oPoly == null){
                         continue;
                     };
-                    // TODO: Ensure that time property is not null or undefined
                     var t1 = FOV.properties['time'];
                     var t2 = videoFOVs[i + 1].properties['time'];
                     if (rtaPoly == undefined) {
                         rtaPoly = oPoly;
                     } else {
                         try{
-                            // TODO: Ggf. simplification wieder entfernen
                             oPoly = helpers.simplifyFeature(oPoly, 10);
                             rtaPoly = turf.union(rtaPoly, oPoly);
                         } catch(e){
@@ -138,12 +131,6 @@ calculateRankScores = function(video,query){
                                 rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Resolved error by simplifying feature")
                             }catch (e){
-                                //var pointsRta = turf.explode(rtaPoly);
-                                //var pointsPoly = turf.explode(rtaPoly);
-                                //pointsRta.features.concat(pointsPoly.features);
-                                //rtaPoly = turf.concave(pointsRta, 0.02, 'kilometers');
-                                //oPoly = helpers.simplifyFeature(oPoly, 8);
-                                //rtaPoly = turf.union(rtaPoly, oPoly);
                                 console.log("Simplification didn't resolve issue: " + e);
                             }
                         }

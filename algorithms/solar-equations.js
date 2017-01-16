@@ -2,7 +2,6 @@
  * Created by Tobi on 04.11.2016.
  */
 
-var nutations = require('./nutations');
 var helpers = require('./helpers');
 var exports = module.exports;
 
@@ -33,32 +32,6 @@ var calcT = function (tg, delta_t) {
     var t = tg + (delta_t / 86400.0);
     return t;
 };
-
-var JulianEphemerisDay = function (t) {
-    var JDE = t + 2452640;
-    return JDE;
-};
-
-var JulianDay = function (tg) {
-    var JD = tg + 2452640
-    return JD;
-};
-
-var JulianEphemerisCentury = function (JDE) {
-    var JCE = (JDE - 2451545.0) / 36525.0;
-    return JCE;
-};
-
-var JulianCentury = function (JD) {
-    var JC = (JD - 2451545.0) / 36525.0;
-    return JC;
-};
-
-var JulianEphemerisMillennium = function (JCE) {
-    var JME = JCE / 10.0;
-    return JME;
-};
-
 
 /*********************************************************
  * 3.2 Heliocentric longitude of the earth (in radians)
@@ -206,119 +179,6 @@ var zenith = function (e0, delta_e) {
 var azimuth = function (sh_t, ch_t, phi, delta_t) {
     var gammaL = Math.atan2(sh_t, ch_t * Math.sin(phi) - Math.sin(delta_t) / Math.cos(delta_t) * Math.cos(phi));
     return gammaL;
-};
-
-/*********************************************************
- * SUNET AND SUNRISE CALCULATIONS
- *********************************************************/
-
-// Calculate the nutation in longitude, delta psi (in degrees)
-
-var X = function(int, JCE){
-    return {
-        0: 297.85036 + 445267.111480 * JCE - 0.0019142 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 189474,
-        1: 357.52772 + 35999.050340 * JCE - 0.0001603 * Math.pow(JCE, 2) - (Math.pow(JCE, 3)) / 300000,
-        2: 134.96298 + 477198.867398 * JCE + 0.0086972 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 56250,
-        3: 93.27191 + 483202.017538 * JCE - 0.0036825 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 327270,
-        4: 125.04452 - 1934.136261 * JCE + 0.0020708 * Math.pow(JCE, 2) + (Math.pow(JCE, 3)) / 450000
-    }[int]
-};
-
-var deltaPsiAt = function (i, JCE) {
-    var a = nutations[i][5];
-    var b = nutations[i][6];
-    var xy = 0;
-    for(var j=0; j<4+1; j++){
-        xy = xy + (X(j, JCE) * nutations[i][j]);
-    }
-    var deltaPsi = (a + b * JCE) * Math.sin(xy);
-    return deltaPsi;
-};
-
-var nutationInLongitude = function (JCE) {
-    var numerator = 0;
-    for(var i=0; i<nutations.length; i++){
-        numerator = numerator + deltaPsiAt(i, JCE);
-    }
-    return numerator / 36000000;
-};
-
-var deltaEpsilonAt = function(i, JCE) {
-    var c = nutations[i][7];
-    var d = nutations[i][8];
-    var xy = 0;
-    for(var j=0; j<4 + 1; j++) {
-        xy = xy + (X(j, JCE) * nutations[i][j]);
-    }
-    deltaEpsilon = (c + d * JCE) * Math.cos(xy);
-    return deltaEpsilon;
-};
-
-exports.nutationInObliquity = function (JCE) {
-    var numerator = 0;
-    for(var i=0; i<nutations.length; i++){
-        numerator = numerator + deltaEpsilonAt(i, JCE);
-    }
-    return numerator / 36000000;
-};
-
-// lighting_conditions.py Zeile 352
-
-exports.localHourAngle = function (latitude, delta) {
-    var h0base = -0.8333;
-    var h0 = Math.acos((Math.sin(helpers.deg2rad(h0base)) - Math.sin(helpers.deg2rad(latitude)) * Math.sin(delta)) / (
-        Math.cos(helpers.deg2rad(latitude)) * Math.cos(delta)));
-    return h0;
-};
-
-var meanSiderealTimeAtGreenwich = function(jd, jc) {
-    var v0 = 280.46061837 + 360.98564736629 * (jd - 2451545) + 0.000387933 * Math.pow(jc, 2) - (Math.pow(jc, 3)) / 38710000;
-    return v0;
-};
-
-exports.sidTimeAtGreenwich = function (date, lat, lng, data, timezone) {
-    var params = data
-
-    var tg = params["tg"];
-    var t = params["t"];
-    var jde = JulianEphemerisDay(t);
-    var jd = JulianDay(tg);
-    var jc = JulianCentury(jd);
-    var jce = JulianEphemerisCentury(jde);
-    var epsilon = params["epsilon"];
-    var delta_psi = nutationInLongitude(jce);
-
-    var v0 = meanSiderealTimeAtGreenwich(jd, jc);
-    v0 = helpers.limitDegrees(v0);
-
-    // Calculate apparent sidereal time at Greenwich, v (in degrees)
-    var v = v0 + delta_psi * Math.cos(epsilon);
-    return v;
-};
-
-exports.calcSolarTransit = function (longitude, alpha, siderealTime) {
-    var v = siderealTime;
-
-    // Calculate the approximate sun transit time, m0, in fraction of day
-    var alpha0 = helpers.limitDegrees(helpers.rad2deg(alpha));
-    var m0 = (alpha0 - longitude - v) / 360;
-
-    // Calculate sunrise and sunset
-    var transit = helpers.limitZero2One(m0);
-
-    return transit;
-};
-
-exports.calcSunrise = function(transit, localHourAngle) {
-    localHourAngle = helpers.limitDegrees(helpers.rad2deg(localHourAngle));
-    var sunrise = helpers.limitZero2One(transit - localHourAngle / 360.0);
-    return sunrise;
-};
-
-exports.calcSunset = function (transit, localHourAngle) {
-    localHourAngle = helpers.limitDegrees(helpers.rad2deg(localHourAngle));
-    var sunset = helpers.limitZero2One(transit + localHourAngle / 360.0);
-    return sunset;
 };
 
 exports.calcParameters = function (date, deltaT, lat, lng, P, T) {

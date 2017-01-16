@@ -162,12 +162,10 @@ angular.module('main').controller('mapCtrl', function($scope, $http, $rootScope,
                             building = features.features[i];
                         }
                     }
-                    //var building = features.features[0];
                     $scope.queryService.setQuery(building);
                     drawPolygon(building, drawnItems);
                 }
             });
-        //L.geoJSON(features.features, {style: style}).addTo(map);
         $rootScope.map.off('click', onFeatureSelect);
         $("#map").css("cursor", "-webkit-grab");
     };

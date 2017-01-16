@@ -7,12 +7,9 @@ var geo = require('./geo-algorithms');
 var turf = require('turf');
 var helpers = require('./helpers');
 
-exports.depictionRank0 = function (fov, fov2, query, objects, brdrPts) {
-    var occ = exports.degreeOfOcclusion(fov, query, objects, brdrPts);
-    return occ;
-};
 
 exports.objectDepiction = function (fov, query, objects, brdrPts) {
+    // FOVScene parameters
     var P = {
         "type": "Feature",
         "geometry": {
@@ -21,28 +18,30 @@ exports.objectDepiction = function (fov, query, objects, brdrPts) {
         },
         "properties": {}
     };
-    var nq = turf.explode(query)["features"];
     var d = fov.properties["heading"];
     var theta = fov.properties["viewable_angle"];
-    // TODO: min und max In Thesis Dokument anpassen!!
+    // Compute angular range of query object
     var objAngleL = normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d);
     var objAngleR = normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d);
     var angleL = Math.max(normalizedAngle(turf.bearing(P, brdrPts["ptLeft"]), d), -theta/2) ;
     var angleR = Math.min(normalizedAngle(turf.bearing(P, brdrPts["ptRight"]), d), theta/2);
     var queryRanges = [[angleL, angleR]];
-    // TODO: Hull ggf entfernen (Performancekosten wahrscheinlich höher als Schleife direkt für alle Objekte laufen zu lassen)
+    // Compute hull polygon for object filtering
     var hull = turf.convex(turf.union(query, P));
+    // Determine visible range of query object
     for(var i in objects){
-        var obj = objects[i];// TODO: IF-Bedingung in Thesis anpassen
-        if((turf.intersect(obj, hull) != undefined) && (JSON.stringify(obj)!=JSON.stringify(query))){
+        var obj = objects[i];
+        // Filter step
+        if((turf.intersect(obj, hull) != undefined) && (JSON.stringify(obj)!= JSON.stringify(query))){
             var occlusionRange = normalizedAngularRange(obj, P, d);
             var ranges = [];
+            // Reduce visible range of the query object by the ranges of occluding objects
             for(var j in queryRanges){
-                var visRanges = determineVisibleRanges(queryRanges[j], occlusionRange, theta);
-                if(visRanges[0].length == 0){
+                var currentRange = determineVisibleRanges(queryRanges[j], occlusionRange, theta);
+                if(currentRange[0].length == 0){
                     return 0; // Query object is completely occluded --> sum of visible ranges i 0
                 }
-                ranges = ranges.concat(visRanges);
+                ranges = ranges.concat(currentRange);
             }
             queryRanges = ranges;
         }
@@ -55,6 +54,7 @@ exports.objectDepiction = function (fov, query, objects, brdrPts) {
     return summedRanges/maxRangeSum
 };
 
+// Compute normalized angular range
 var normalizedAngularRange = function (obj, pos, d) {
     var nq = turf.explode(obj);
     var objectAngles = [];
@@ -72,6 +72,7 @@ var normalizedAngularRange = function (obj, pos, d) {
     return range;
 };
 
+// Determine visible ranges
 var determineVisibleRanges = function (queryRange, occlusionRange, theta) {
     var qLeft = Math.min(queryRange[0], queryRange[1]);
     var qRight = Math.max(queryRange[0], queryRange[1]);
@@ -102,6 +103,7 @@ var determineVisibleRanges = function (queryRange, occlusionRange, theta) {
     return limitRanges(ranges, theta);
 };
 
+// Normalize the given angle with respect to the given viewing direction
 var normalizedAngle = function (angle, direction) {
     angle = helpers.limitDegrees(angle - direction);
     if(angle>180){
@@ -110,6 +112,7 @@ var normalizedAngle = function (angle, direction) {
     return angle;
 };
 
+// Limit given ranges to viewable angle of FOVScene
 var limitRanges = function(list, theta){
     for(var i=0; i < list.length; i++){
         var item = list[i];
