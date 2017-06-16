@@ -68,8 +68,8 @@ exports.distanceDeviation = function (fov, Q, brdrPts) {
     }, P)*1000;
 
     // Transform FOV border angles from geographic to cartesian angles and calculate the distance
-    var angL = transformAngle(((d - (theta/2)) + (90-d)) % 180);
-    var angR = transformAngle(((d + (theta/2)) + (90-d)) % 180);
+    var angL = transformAngle(parseFloat((d - (theta/2)) + (90-d)) % 180);
+    var angR = transformAngle(parseFloat((d + (theta/2)) + (90-d)) % 180);
     var DL = Math.abs(Lh/Math.tan(helpers.deg2rad(angL)));
     var DR = Math.abs(Rh/Math.tan(helpers.deg2rad(angR)));
     var D0 = Math.max(DL,DR);

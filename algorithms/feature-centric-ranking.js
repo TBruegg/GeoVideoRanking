@@ -186,7 +186,7 @@ var osmToGeoJSON = function(json){
 
 var overpassRequest = function (host, query) {
     var defer = q.defer();
-    /*
+    //*
     var options = {
         host: host,
         path: query,
@@ -194,7 +194,7 @@ var overpassRequest = function (host, query) {
         method: 'GET'
     };
     //*/
-    //*
+    /*
     var path = host+query;
     var options = {
         host: "wwwproxy.uni-muenster.de",

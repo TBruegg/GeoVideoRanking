@@ -96,6 +96,17 @@ overlapBoundary = function(fov, query){
 
 calculateRankScores = function(video,query){
     var basic_start = process.hrtime();
+    var timings = {
+        bBaseTime: 0,
+        fovs_basic: 0,
+        filter: 0,
+        fovs_processed_basic: 0,
+        overlapPoly: 0,
+        rd: 0,
+        rsa: 0,
+        rta: 0,
+
+    };
     // Parameter initializations
     var queryPolygon = query;
     var videoObject = video;
@@ -111,7 +122,11 @@ calculateRankScores = function(video,query){
     // Filter step 1
     var t_basic = process.hrtime(basic_start);
     //console.log("t_basic: " + t_basic);
-    timings["bBaseTime"] += toSeconds(t_basic);
+    try {
+        timings["bBaseTime"] += toSeconds(t_basic);
+    } catch(e) {
+        console.log(e);
+    }
     timings["fovs_basic"] += n;
     var filter1 = process.hrtime();
     if(helpers.rectIntersect(M, queryPolygon)) {
