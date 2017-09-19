@@ -22,8 +22,8 @@ var algorithms = require('./algorithms/geo-algorithms');
 var ranking = require('./algorithms/basic-ranking');
 
 var pg = require('pg');
-var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
-// var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
+// var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
+var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
 var fovTableName = "fovpolygons_90";
 
 
