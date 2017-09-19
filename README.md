@@ -11,3 +11,7 @@ This piece of software was developed as part of a master thesis at the Institute
 3.  Open a shell and navigate to the project directory.
 4.  Run ```npm install``` to download and install all required modules.
 5.  Run `node app.js` to start the system
+
+## Configuration
+
+The application needs to be configured to your local environment in order to work. It needs the connection information of the video database which serves the desired data. Moreover, the file directory holding the videos needs to be configured so that they can be viewed in the application. The associated parameters can be found within the head section of the app.js file. Set the value of 
