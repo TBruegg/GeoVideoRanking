@@ -23,8 +23,11 @@ var ranking = require('./algorithms/basic-ranking');
 
 var pg = require('pg');
 // var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/test";
+
+// ADJUST THE FOLLOWING PARAMETERS TO MATCH YOUR CONFIGURATION
 var dbConnectionString = "postgres://postgres:postgres@127.0.0.1:5432/geovideo";
 var fovTableName = "fovpolygons_90";
+var video_directory = "F:/Videos GeoVid/videos/";
 
 
 
@@ -40,7 +43,7 @@ app.get('/', function (req, res) {
 
 app.get('/video/:id', function (req,res) {
     var videoId = req.params.id;
-    var url = "F:/Videos GeoVid/videos/" + videoId +".mp4";
+    var url = video_directory + videoId +".mp4";
     // var url = "/home/t_brue09/videos/" + videoId +".mp4";
     var filePath = path.resolve(url);
     var stat = fs.statSync(filePath);
