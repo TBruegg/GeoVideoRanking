@@ -193,19 +193,6 @@ var overpassRequest = function (host, query) {
         port: 80,
         method: 'GET'
     };
-    //*/
-    /*
-    var path = host+query;
-    var options = {
-        host: "wwwproxy.uni-muenster.de",
-        path: "http://"+path,
-        port: 80,
-        method: 'GET',
-        headers: {
-            Host: host
-        }
-    };
-    //*/
     console.log("Overpass Request");
     httpRequest(options).then(function (result) {
         defer.resolve(result);
